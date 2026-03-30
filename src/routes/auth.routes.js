@@ -28,6 +28,10 @@ router.post('/otp/request', (req, res) => {
   if (!email || !isValidEmail(email)) {
     return error(res, 'Email invalido', 400);
   }
+  const user = findUserByEmail(email);
+  if (!user) {
+    return error(res, 'No existe una cuenta con ese email', 404);
+  }
   const code = generateOtp();
   const otp = {
     email,
