@@ -23,11 +23,12 @@ module.exports = [
         afterAll: 'readonly',
         beforeEach: 'readonly',
         afterEach: 'readonly',
+        jest: 'readonly',
       },
     },
     rules: {
       'no-console': 'off',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
 ];
