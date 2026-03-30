@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { success, error } = require('../utils/response');
 const { authenticate } = require('../middleware/auth');
-const { findUserById, users } = require('../data/data');
+const { users } = require('../data/data');
 
 const router = Router();
 

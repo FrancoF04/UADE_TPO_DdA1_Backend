@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 const {
   findUserByEmail,
   findUserByUsername,
-  findUserById,
   addUser,
   addOtp,
   addSession,

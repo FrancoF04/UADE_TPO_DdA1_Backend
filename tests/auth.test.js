@@ -4,8 +4,6 @@ const app = require('../src/app');
 const { users, otpCodes, sessions } = require('../src/data/data');
 
 describe('Auth endpoints', () => {
-  let originalUsers;
-
   beforeEach(async () => {
     // Reset data state
     users.length = 0;
