@@ -5,7 +5,7 @@ const users = [
     id: 'u1',
     email: 'juan@example.com',
     username: 'juanperez',
-    password: '',
+    password: 'qwerty123',
     fullName: 'Juan Perez',
     preferences: {
       categories: ['free_tour', 'adventure'],
@@ -17,7 +17,7 @@ const users = [
     id: 'u2',
     email: 'maria@example.com',
     username: 'mariagarcia',
-    password: '',
+    password: 'password456',
     fullName: 'Maria Garcia',
     preferences: {
       categories: ['gastronomic', 'guided_visit'],
