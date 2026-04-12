@@ -166,8 +166,4 @@ router.post('/logout', authenticate, (req, res) => {
   return success(res, { message: 'Sesion cerrada' });
 });
 
-router.get('/me', authenticate, (req, res) => {
-  return success(res, { user: sanitizeUser(req.user) });
-});
-
 module.exports = router;

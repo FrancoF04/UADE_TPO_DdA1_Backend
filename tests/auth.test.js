@@ -293,24 +293,4 @@ describe('Auth endpoints', () => {
     });
   });
 
-  describe('GET /api/auth/me', () => {
-    it('should return current user without password', async () => {
-      sessions.push({
-        token: 'me-token',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-      const res = await request(app)
-        .get('/api/auth/me')
-        .set('Authorization', 'Bearer me-token');
-      expect(res.status).toBe(200);
-      expect(res.body.data.user.email).toBe('juan@example.com');
-      expect(res.body.data.user.password).toBeUndefined();
-    });
-
-    it('should reject unauthenticated request', async () => {
-      const res = await request(app).get('/api/auth/me');
-      expect(res.status).toBe(401);
-    });
-  });
 });

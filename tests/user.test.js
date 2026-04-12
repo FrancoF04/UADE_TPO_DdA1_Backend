@@ -19,6 +19,27 @@ describe('User endpoints', () => {
     });
   });
 
+  describe('GET /api/users/me', () => {
+    it('should return current user without password', async () => {
+      sessions.push({
+        token: 'me-token',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+      const res = await request(app)
+        .get('/api/users/me')
+        .set('Authorization', 'Bearer me-token');
+      expect(res.status).toBe(200);
+      expect(res.body.data.user.email).toBe('juan@example.com');
+      expect(res.body.data.user.password).toBeUndefined();
+    });
+
+    it('should require authentication', async () => {
+      const res = await request(app).get('/api/users/me');
+      expect(res.status).toBe(401);
+    });
+  });
+
   describe('PUT /api/users/preferences', () => {
     it('should update user preferences', async () => {
       sessions.push({

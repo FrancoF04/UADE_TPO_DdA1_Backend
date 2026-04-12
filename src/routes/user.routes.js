@@ -5,6 +5,15 @@ const { users } = require('../data/data');
 
 const router = Router();
 
+const sanitizeUser = (user) => {
+  const { password: _password, ...sanitized } = user;
+  return sanitized;
+};
+
+router.get('/me', authenticate, (req, res) => {
+  return success(res, { user: sanitizeUser(req.user) });
+});
+
 router.put('/preferences', authenticate, (req, res) => {
   const { categories, destinations } = req.body;
   if (!categories || !destinations) {
