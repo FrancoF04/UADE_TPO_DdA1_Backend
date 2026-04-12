@@ -14,6 +14,7 @@ describe('User endpoints', () => {
       password: await bcrypt.hash('password123', 10),
       fullName: 'Juan Perez',
       phoneNumber: '+5491112345678',
+      activities: [],
       preferences: { categories: ['free_tour'], destinations: ['Buenos Aires'] },
       createdAt: '2026-01-15T10:00:00Z',
     });
@@ -95,6 +96,63 @@ describe('User endpoints', () => {
         .send({ categories: 'adventure', destinations: ['Mendoza'] });
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Categories y destinations deben ser arrays');
+    });
+  });
+
+  describe('GET /api/users/activities', () => {
+    it('should return empty activity id list by default', async () => {
+      sessions.push({
+        token: 'activities-token',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+
+      const res = await request(app)
+        .get('/api/users/activities')
+        .set('Authorization', 'Bearer activities-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.activities).toEqual([]);
+    });
+
+    it('should return saved activity ids', async () => {
+      sessions.push({
+        token: 'list-token',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+
+      await request(app)
+        .post('/api/users/activities')
+        .set('Authorization', 'Bearer list-token')
+        .send({ activityId: 'a1' });
+
+      const res = await request(app)
+        .get('/api/users/activities')
+        .set('Authorization', 'Bearer list-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.activities).toHaveLength(1);
+      expect(res.body.data.activities[0]).toBe('a1');
+    });
+  });
+
+  describe('POST /api/users/activities', () => {
+    it('should save an activity without status', async () => {
+      sessions.push({
+        token: 'save-token',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+
+      const firstResponse = await request(app)
+        .post('/api/users/activities')
+        .set('Authorization', 'Bearer save-token')
+        .send({ activityId: 'a1' });
+
+      expect(firstResponse.status).toBe(201);
+      expect(firstResponse.body.data.activityId).toBe('a1');
+      expect(firstResponse.body.data.activities).toHaveLength(1);
     });
   });
 });

@@ -71,6 +71,7 @@ router.post('/otp/verify', (req, res) => {
       password: '',
       fullName: '',
       phoneNumber: '',
+      activities: [],
       preferences: { categories: [], destinations: [] },
       createdAt: new Date().toISOString(),
     });
@@ -133,6 +134,7 @@ router.post('/register', async (req, res) => {
     password: hashedPassword,
     fullName,
     phoneNumber,
+    activities: [],
     preferences: { categories: [], destinations: [] },
     createdAt: new Date().toISOString(),
   });
