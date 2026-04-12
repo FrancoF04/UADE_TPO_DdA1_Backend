@@ -16,6 +16,7 @@ describe('Auth endpoints', () => {
         username: 'juanperez',
         password: await bcrypt.hash('password123', 10),
         fullName: 'Juan Perez',
+        phoneNumber: '+5491112345678',
         preferences: { categories: ['free_tour', 'adventure'], destinations: ['Buenos Aires'] },
         createdAt: '2026-01-15T10:00:00Z',
       },
@@ -25,6 +26,7 @@ describe('Auth endpoints', () => {
         username: 'mariagarcia',
         password: await bcrypt.hash('password456', 10),
         fullName: 'Maria Garcia',
+        phoneNumber: '+5491165432100',
         preferences: {
           categories: ['gastronomic', 'guided_visit'],
           destinations: ['Mendoza', 'Bariloche'],
@@ -41,6 +43,7 @@ describe('Auth endpoints', () => {
         username: 'newuser',
         password: 'password789',
         fullName: 'New User',
+        phoneNumber: '+5491133344455',
       });
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -54,6 +57,7 @@ describe('Auth endpoints', () => {
         username: 'otherusername',
         password: 'password789',
         fullName: 'Another User',
+        phoneNumber: '+5491199988877',
       });
       expect(res.status).toBe(409);
       expect(res.body.error).toBe('El email ya esta registrado');
@@ -65,6 +69,7 @@ describe('Auth endpoints', () => {
         username: 'juanperez',
         password: 'password789',
         fullName: 'Another User',
+        phoneNumber: '+5491177766655',
       });
       expect(res.status).toBe(409);
       expect(res.body.error).toBe('El username ya esta en uso');
@@ -84,6 +89,7 @@ describe('Auth endpoints', () => {
         username: 'validuser',
         password: 'password789',
         fullName: 'Test User',
+        phoneNumber: '+5491144455566',
       });
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Email invalido');
@@ -95,9 +101,22 @@ describe('Auth endpoints', () => {
         username: 'shortpw',
         password: '12345',
         fullName: 'Test User',
+        phoneNumber: '+5491122233344',
       });
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('La contrasena debe tener al menos 6 caracteres');
+    });
+
+    it('should reject invalid phone number', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        email: 'phone@example.com',
+        username: 'phoneuser',
+        password: 'password789',
+        fullName: 'Phone User',
+        phoneNumber: 'abc-123',
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Numero de telefono invalido');
     });
   });
 

@@ -13,6 +13,7 @@ describe('User endpoints', () => {
       username: 'juanperez',
       password: await bcrypt.hash('password123', 10),
       fullName: 'Juan Perez',
+      phoneNumber: '+5491112345678',
       preferences: { categories: ['free_tour'], destinations: ['Buenos Aires'] },
       createdAt: '2026-01-15T10:00:00Z',
     });

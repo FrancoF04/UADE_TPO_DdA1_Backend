@@ -7,6 +7,7 @@ const users = [
     username: 'juanperez',
     password: 'qwerty123',
     fullName: 'Juan Perez',
+    phoneNumber: '+5491112345678',
     preferences: {
       categories: ['free_tour', 'adventure'],
       destinations: ['Buenos Aires'],
@@ -19,6 +20,7 @@ const users = [
     username: 'mariagarcia',
     password: 'password456',
     fullName: 'Maria Garcia',
+    phoneNumber: '+5491165432100',
     preferences: {
       categories: ['gastronomic', 'guided_visit'],
       destinations: ['Mendoza', 'Bariloche'],

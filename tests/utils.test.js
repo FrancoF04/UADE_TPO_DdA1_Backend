@@ -1,4 +1,10 @@
-const { isValidEmail, isValidOtp, isValidUsername, isValidPassword } = require('../src/utils/validation');
+const {
+  isValidEmail,
+  isValidOtp,
+  isValidUsername,
+  isValidPassword,
+  isValidPhoneNumber,
+} = require('../src/utils/validation');
 const { generateOtp, isOtpExpired } = require('../src/utils/otp');
 const { success, error } = require('../src/utils/response');
 const { generateToken } = require('../src/utils/token');
@@ -59,6 +65,21 @@ describe('Validation utils', () => {
       expect(isValidPassword('')).toBe(false);
       expect(isValidPassword(null)).toBe(false);
       expect(isValidPassword(123456)).toBe(false);
+    });
+  });
+
+  describe('isValidPhoneNumber', () => {
+    it('should return true for valid phone numbers', () => {
+      expect(isValidPhoneNumber('+5491112345678')).toBe(true);
+      expect(isValidPhoneNumber('5491112345678')).toBe(true);
+      expect(isValidPhoneNumber('12345678')).toBe(true);
+    });
+
+    it('should return false for invalid phone numbers', () => {
+      expect(isValidPhoneNumber('1234567')).toBe(false);
+      expect(isValidPhoneNumber('abc123456')).toBe(false);
+      expect(isValidPhoneNumber('11 1234 5678')).toBe(false);
+      expect(isValidPhoneNumber('')).toBe(false);
     });
   });
 });

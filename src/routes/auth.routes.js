@@ -11,7 +11,13 @@ const {
   otpCodes,
 } = require('../data/data');
 const { success, error } = require('../utils/response');
-const { isValidEmail, isValidOtp, isValidUsername, isValidPassword } = require('../utils/validation');
+const {
+  isValidEmail,
+  isValidOtp,
+  isValidUsername,
+  isValidPassword,
+  isValidPhoneNumber,
+} = require('../utils/validation');
 const { generateOtp, isOtpExpired } = require('../utils/otp');
 const { generateToken } = require('../utils/token');
 const { authenticate } = require('../middleware/auth');
@@ -64,6 +70,7 @@ router.post('/otp/verify', (req, res) => {
       username: email.split('@')[0],
       password: '',
       fullName: '',
+      phoneNumber: '',
       preferences: { categories: [], destinations: [] },
       createdAt: new Date().toISOString(),
     });
@@ -96,8 +103,8 @@ router.post('/otp/resend', (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { email, username, password, fullName } = req.body;
-  if (!email || !username || !password || !fullName) {
+  const { email, username, password, fullName, phoneNumber } = req.body;
+  if (!email || !username || !password || !fullName || !phoneNumber) {
     return error(res, 'Todos los campos son requeridos', 400);
   }
   if (!isValidEmail(email)) {
@@ -108,6 +115,9 @@ router.post('/register', async (req, res) => {
   }
   if (!isValidPassword(password)) {
     return error(res, 'La contrasena debe tener al menos 6 caracteres', 400);
+  }
+  if (!isValidPhoneNumber(phoneNumber)) {
+    return error(res, 'Numero de telefono invalido', 400);
   }
   if (findUserByEmail(email)) {
     return error(res, 'El email ya esta registrado', 409);
@@ -122,6 +132,7 @@ router.post('/register', async (req, res) => {
     username,
     password: hashedPassword,
     fullName,
+    phoneNumber,
     preferences: { categories: [], destinations: [] },
     createdAt: new Date().toISOString(),
   });
