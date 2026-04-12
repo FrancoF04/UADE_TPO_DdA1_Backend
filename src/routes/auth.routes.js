@@ -24,11 +24,6 @@ const { authenticate } = require('../middleware/auth');
 
 const router = Router();
 
-const sanitizeUser = (user) => {
-  const { password: _password, ...sanitized } = user;
-  return sanitized;
-};
-
 router.post('/otp/request', (req, res) => {
   const { email } = req.body;
   if (!email || !isValidEmail(email)) {
@@ -76,13 +71,13 @@ router.post('/otp/verify', (req, res) => {
       createdAt: new Date().toISOString(),
     });
   }
-  const token = generateToken();
+  const token = generateToken({ userId: user.id, fullName: user.fullName });
   addSession({
     token,
     userId: user.id,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   });
-  return success(res, { token, user: sanitizeUser(user) });
+  return success(res, { token });
 });
 
 router.post('/otp/resend', (req, res) => {
@@ -138,7 +133,13 @@ router.post('/register', async (req, res) => {
     preferences: { categories: [], destinations: [] },
     createdAt: new Date().toISOString(),
   });
-  return success(res, { user: sanitizeUser(user) }, null, 201);
+  const token = generateToken({ userId: user.id, fullName: user.fullName });
+  addSession({
+    token,
+    userId: user.id,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  });
+  return success(res, { token }, null, 201);
 });
 
 router.post('/login', async (req, res) => {
@@ -154,13 +155,13 @@ router.post('/login', async (req, res) => {
   if (!isMatch) {
     return error(res, 'Credenciales invalidas', 401);
   }
-  const token = generateToken();
+  const token = generateToken({ userId: user.id, fullName: user.fullName });
   addSession({
     token,
     userId: user.id,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   });
-  return success(res, { token, user: sanitizeUser(user) });
+  return success(res, { token });
 });
 
 router.post('/logout', authenticate, (req, res) => {

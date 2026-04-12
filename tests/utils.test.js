@@ -158,16 +158,18 @@ describe('Response utils', () => {
 
 describe('Token utils', () => {
   describe('generateToken', () => {
-    it('should return a valid UUID', () => {
-      const token = generateToken();
-      expect(token).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-      );
+    it('should include user identity in the token payload', () => {
+      const token = generateToken({ userId: 'u1', fullName: 'Juan Perez' });
+      const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+      expect(payload.userId).toBe('u1');
+      expect(payload.fullName).toBe('Juan Perez');
+      expect(payload.jti).toBeDefined();
     });
 
     it('should generate unique tokens', () => {
-      const token1 = generateToken();
-      const token2 = generateToken();
+      const token1 = generateToken({ userId: 'u1', fullName: 'Juan Perez' });
+      const token2 = generateToken({ userId: 'u1', fullName: 'Juan Perez' });
       expect(token1).not.toBe(token2);
     });
   });

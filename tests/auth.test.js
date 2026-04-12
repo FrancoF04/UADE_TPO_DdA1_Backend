@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 const { users, otpCodes, sessions } = require('../src/data/data');
 
+const decodeToken = (token) => JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
 describe('Auth endpoints', () => {
   beforeEach(async () => {
     // Reset data state
@@ -47,8 +49,12 @@ describe('Auth endpoints', () => {
       });
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user.email).toBe('new@example.com');
-      expect(res.body.data.user.password).toBeUndefined();
+      expect(res.body.data.token).toBeDefined();
+      expect(res.body.data.user).toBeUndefined();
+
+      const payload = decodeToken(res.body.data.token);
+      expect(payload.userId).toBeDefined();
+      expect(payload.fullName).toBe('New User');
     });
 
     it('should reject duplicate email', async () => {
@@ -129,8 +135,11 @@ describe('Auth endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.token).toBeDefined();
-      expect(res.body.data.user.username).toBe('juanperez');
-      expect(res.body.data.user.password).toBeUndefined();
+      expect(res.body.data.user).toBeUndefined();
+
+      const payload = decodeToken(res.body.data.token);
+      expect(payload.userId).toBe('u1');
+      expect(payload.fullName).toBe('Juan Perez');
     });
 
     it('should reject wrong password', async () => {
@@ -195,8 +204,10 @@ describe('Auth endpoints', () => {
       });
       expect(res.status).toBe(200);
       expect(res.body.data.token).toBeDefined();
-      expect(res.body.data.user).toBeDefined();
-      expect(res.body.data.user.password).toBeUndefined();
+
+      const payload = decodeToken(res.body.data.token);
+      expect(payload.userId).toBe('u1');
+      expect(payload.fullName).toBe('Juan Perez');
     });
 
     it('should reject wrong OTP code', async () => {
