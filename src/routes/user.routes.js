@@ -1,9 +1,49 @@
 const { Router } = require('express');
 const { success, error } = require('../utils/response');
 const { authenticate } = require('../middleware/auth');
-const { users } = require('../data/data');
+const { users, addUserActivity, getUserActivities, findUserById } = require('../data/data');
 
 const router = Router();
+
+const sanitizeUser = (user) => {
+  const { password: _password, ...sanitized } = user;
+  if (!Array.isArray(sanitized.activities)) {
+    sanitized.activities = [];
+  }
+  return sanitized;
+};
+
+router.get('/me', authenticate, (req, res) => {
+  const userId = req.auth?.userId || req.user?.id;
+  const user = findUserById(userId);
+
+  if (!user) {
+    return error(res, 'Usuario no encontrado', 404);
+  }
+
+  return success(res, { user: sanitizeUser(user) });
+});
+
+router.get('/activities', authenticate, (req, res) => {
+  const activities = getUserActivities(req.user.id) || [];
+  return success(res, { activities });
+});
+
+router.post('/activities', authenticate, (req, res) => {
+  const { activityId } = req.body;
+
+  if (!activityId || typeof activityId !== 'string') {
+    return error(res, 'activityId es requerido', 400);
+  }
+
+  const activity = addUserActivity(req.user.id, activityId);
+
+  if (!activity) {
+    return error(res, 'Actividad no encontrada', 404);
+  }
+
+  return success(res, { activityId: activity, activities: getUserActivities(req.user.id) || [] }, null, 201);
+});
 
 router.put('/preferences', authenticate, (req, res) => {
   const { categories, destinations } = req.body;

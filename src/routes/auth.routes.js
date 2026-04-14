@@ -11,17 +11,18 @@ const {
   otpCodes,
 } = require('../data/data');
 const { success, error } = require('../utils/response');
-const { isValidEmail, isValidOtp, isValidUsername, isValidPassword } = require('../utils/validation');
+const {
+  isValidEmail,
+  isValidOtp,
+  isValidUsername,
+  isValidPassword,
+  isValidPhoneNumber,
+} = require('../utils/validation');
 const { generateOtp, isOtpExpired } = require('../utils/otp');
 const { generateToken } = require('../utils/token');
 const { authenticate } = require('../middleware/auth');
 
 const router = Router();
-
-const sanitizeUser = (user) => {
-  const { password: _password, ...sanitized } = user;
-  return sanitized;
-};
 
 router.post('/otp/request', (req, res) => {
   const { email } = req.body;
@@ -64,17 +65,19 @@ router.post('/otp/verify', (req, res) => {
       username: email.split('@')[0],
       password: '',
       fullName: '',
+      phoneNumber: '',
+      activities: [],
       preferences: { categories: [], destinations: [] },
       createdAt: new Date().toISOString(),
     });
   }
-  const token = generateToken();
+  const token = generateToken({ userId: user.id, fullName: user.fullName });
   addSession({
     token,
     userId: user.id,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   });
-  return success(res, { token, user: sanitizeUser(user) });
+  return success(res, { token });
 });
 
 router.post('/otp/resend', (req, res) => {
@@ -96,8 +99,8 @@ router.post('/otp/resend', (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { email, username, password, fullName } = req.body;
-  if (!email || !username || !password || !fullName) {
+  const { email, username, password, fullName, phoneNumber } = req.body;
+  if (!email || !username || !password || !fullName || !phoneNumber) {
     return error(res, 'Todos los campos son requeridos', 400);
   }
   if (!isValidEmail(email)) {
@@ -108,6 +111,9 @@ router.post('/register', async (req, res) => {
   }
   if (!isValidPassword(password)) {
     return error(res, 'La contrasena debe tener al menos 6 caracteres', 400);
+  }
+  if (!isValidPhoneNumber(phoneNumber)) {
+    return error(res, 'Numero de telefono invalido', 400);
   }
   if (findUserByEmail(email)) {
     return error(res, 'El email ya esta registrado', 409);
@@ -122,10 +128,18 @@ router.post('/register', async (req, res) => {
     username,
     password: hashedPassword,
     fullName,
+    phoneNumber,
+    activities: [],
     preferences: { categories: [], destinations: [] },
     createdAt: new Date().toISOString(),
   });
-  return success(res, { user: sanitizeUser(user) }, null, 201);
+  const token = generateToken({ userId: user.id, fullName: user.fullName });
+  addSession({
+    token,
+    userId: user.id,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  });
+  return success(res, { token }, null, 201);
 });
 
 router.post('/login', async (req, res) => {
@@ -141,22 +155,18 @@ router.post('/login', async (req, res) => {
   if (!isMatch) {
     return error(res, 'Credenciales invalidas', 401);
   }
-  const token = generateToken();
+  const token = generateToken({ userId: user.id, fullName: user.fullName });
   addSession({
     token,
     userId: user.id,
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   });
-  return success(res, { token, user: sanitizeUser(user) });
+  return success(res, { token });
 });
 
 router.post('/logout', authenticate, (req, res) => {
   removeSession(req.session.token);
   return success(res, { message: 'Sesion cerrada' });
-});
-
-router.get('/me', authenticate, (req, res) => {
-  return success(res, { user: sanitizeUser(req.user) });
 });
 
 module.exports = router;

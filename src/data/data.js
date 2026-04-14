@@ -5,8 +5,10 @@ const users = [
     id: 'u1',
     email: 'juan@example.com',
     username: 'juanperez',
-    password: '',
+    password: 'qwerty123',
     fullName: 'Juan Perez',
+    phoneNumber: '+5491112345678',
+    activities: [],
     preferences: {
       categories: ['free_tour', 'adventure'],
       destinations: ['Buenos Aires'],
@@ -17,8 +19,10 @@ const users = [
     id: 'u2',
     email: 'maria@example.com',
     username: 'mariagarcia',
-    password: '',
+    password: 'password456',
     fullName: 'Maria Garcia',
+    phoneNumber: '+5491165432100',
+    activities: [],
     preferences: {
       categories: ['gastronomic', 'guided_visit'],
       destinations: ['Mendoza', 'Bariloche'],
@@ -440,8 +444,46 @@ const findUserById = (id) => users.find((u) => u.id === id);
 const findSessionByToken = (token) => sessions.find((s) => s.token === token);
 
 const addUser = (user) => {
+  if (!Array.isArray(user.activities)) {
+    user.activities = [];
+  }
   users.push(user);
   return user;
+};
+
+const addUserActivity = (userId, activityId) => {
+  const user = findUserById(userId);
+  if (!user) {
+    return null;
+  }
+
+  const activity = activities.find((item) => item.id === activityId);
+  if (!activity) {
+    return null;
+  }
+
+  if (!Array.isArray(user.activities)) {
+    user.activities = [];
+  }
+
+  if (!user.activities.includes(activityId)) {
+    user.activities.push(activityId);
+  }
+
+  return activityId;
+};
+
+const getUserActivities = (userId) => {
+  const user = findUserById(userId);
+  if (!user) {
+    return null;
+  }
+
+  if (!Array.isArray(user.activities)) {
+    user.activities = [];
+  }
+
+  return user.activities;
 };
 
 const addOtp = (otp) => {
@@ -483,4 +525,6 @@ module.exports = {
   addSession,
   removeSession,
   invalidateOtpsForEmail,
+  addUserActivity,
+  getUserActivities,
 };

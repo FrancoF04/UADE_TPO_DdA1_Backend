@@ -1,4 +1,10 @@
-const { isValidEmail, isValidOtp, isValidUsername, isValidPassword } = require('../src/utils/validation');
+const {
+  isValidEmail,
+  isValidOtp,
+  isValidUsername,
+  isValidPassword,
+  isValidPhoneNumber,
+} = require('../src/utils/validation');
 const { generateOtp, isOtpExpired } = require('../src/utils/otp');
 const { success, error } = require('../src/utils/response');
 const { generateToken } = require('../src/utils/token');
@@ -59,6 +65,21 @@ describe('Validation utils', () => {
       expect(isValidPassword('')).toBe(false);
       expect(isValidPassword(null)).toBe(false);
       expect(isValidPassword(123456)).toBe(false);
+    });
+  });
+
+  describe('isValidPhoneNumber', () => {
+    it('should return true for valid phone numbers', () => {
+      expect(isValidPhoneNumber('+5491112345678')).toBe(true);
+      expect(isValidPhoneNumber('5491112345678')).toBe(true);
+      expect(isValidPhoneNumber('12345678')).toBe(true);
+    });
+
+    it('should return false for invalid phone numbers', () => {
+      expect(isValidPhoneNumber('1234567')).toBe(false);
+      expect(isValidPhoneNumber('abc123456')).toBe(false);
+      expect(isValidPhoneNumber('11 1234 5678')).toBe(false);
+      expect(isValidPhoneNumber('')).toBe(false);
     });
   });
 });
@@ -137,16 +158,18 @@ describe('Response utils', () => {
 
 describe('Token utils', () => {
   describe('generateToken', () => {
-    it('should return a valid UUID', () => {
-      const token = generateToken();
-      expect(token).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-      );
+    it('should include user identity in the token payload', () => {
+      const token = generateToken({ userId: 'u1', fullName: 'Juan Perez' });
+      const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+      expect(payload.userId).toBe('u1');
+      expect(payload.fullName).toBe('Juan Perez');
+      expect(payload.jti).toBeDefined();
     });
 
     it('should generate unique tokens', () => {
-      const token1 = generateToken();
-      const token2 = generateToken();
+      const token1 = generateToken({ userId: 'u1', fullName: 'Juan Perez' });
+      const token2 = generateToken({ userId: 'u1', fullName: 'Juan Perez' });
       expect(token1).not.toBe(token2);
     });
   });

@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 const { users, otpCodes, sessions } = require('../src/data/data');
 
+const decodeToken = (token) => JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
 describe('Auth endpoints', () => {
   beforeEach(async () => {
     // Reset data state
@@ -16,6 +18,7 @@ describe('Auth endpoints', () => {
         username: 'juanperez',
         password: await bcrypt.hash('password123', 10),
         fullName: 'Juan Perez',
+        phoneNumber: '+5491112345678',
         preferences: { categories: ['free_tour', 'adventure'], destinations: ['Buenos Aires'] },
         createdAt: '2026-01-15T10:00:00Z',
       },
@@ -25,6 +28,7 @@ describe('Auth endpoints', () => {
         username: 'mariagarcia',
         password: await bcrypt.hash('password456', 10),
         fullName: 'Maria Garcia',
+        phoneNumber: '+5491165432100',
         preferences: {
           categories: ['gastronomic', 'guided_visit'],
           destinations: ['Mendoza', 'Bariloche'],
@@ -41,11 +45,16 @@ describe('Auth endpoints', () => {
         username: 'newuser',
         password: 'password789',
         fullName: 'New User',
+        phoneNumber: '+5491133344455',
       });
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user.email).toBe('new@example.com');
-      expect(res.body.data.user.password).toBeUndefined();
+      expect(res.body.data.token).toBeDefined();
+      expect(res.body.data.user).toBeUndefined();
+
+      const payload = decodeToken(res.body.data.token);
+      expect(payload.userId).toBeDefined();
+      expect(payload.fullName).toBe('New User');
     });
 
     it('should reject duplicate email', async () => {
@@ -54,6 +63,7 @@ describe('Auth endpoints', () => {
         username: 'otherusername',
         password: 'password789',
         fullName: 'Another User',
+        phoneNumber: '+5491199988877',
       });
       expect(res.status).toBe(409);
       expect(res.body.error).toBe('El email ya esta registrado');
@@ -65,6 +75,7 @@ describe('Auth endpoints', () => {
         username: 'juanperez',
         password: 'password789',
         fullName: 'Another User',
+        phoneNumber: '+5491177766655',
       });
       expect(res.status).toBe(409);
       expect(res.body.error).toBe('El username ya esta en uso');
@@ -84,6 +95,7 @@ describe('Auth endpoints', () => {
         username: 'validuser',
         password: 'password789',
         fullName: 'Test User',
+        phoneNumber: '+5491144455566',
       });
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Email invalido');
@@ -95,9 +107,22 @@ describe('Auth endpoints', () => {
         username: 'shortpw',
         password: '12345',
         fullName: 'Test User',
+        phoneNumber: '+5491122233344',
       });
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('La contrasena debe tener al menos 6 caracteres');
+    });
+
+    it('should reject invalid phone number', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        email: 'phone@example.com',
+        username: 'phoneuser',
+        password: 'password789',
+        fullName: 'Phone User',
+        phoneNumber: 'abc-123',
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Numero de telefono invalido');
     });
   });
 
@@ -110,8 +135,11 @@ describe('Auth endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.token).toBeDefined();
-      expect(res.body.data.user.username).toBe('juanperez');
-      expect(res.body.data.user.password).toBeUndefined();
+      expect(res.body.data.user).toBeUndefined();
+
+      const payload = decodeToken(res.body.data.token);
+      expect(payload.userId).toBe('u1');
+      expect(payload.fullName).toBe('Juan Perez');
     });
 
     it('should reject wrong password', async () => {
@@ -176,8 +204,10 @@ describe('Auth endpoints', () => {
       });
       expect(res.status).toBe(200);
       expect(res.body.data.token).toBeDefined();
-      expect(res.body.data.user).toBeDefined();
-      expect(res.body.data.user.password).toBeUndefined();
+
+      const payload = decodeToken(res.body.data.token);
+      expect(payload.userId).toBe('u1');
+      expect(payload.fullName).toBe('Juan Perez');
     });
 
     it('should reject wrong OTP code', async () => {
@@ -274,24 +304,4 @@ describe('Auth endpoints', () => {
     });
   });
 
-  describe('GET /api/auth/me', () => {
-    it('should return current user without password', async () => {
-      sessions.push({
-        token: 'me-token',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-      const res = await request(app)
-        .get('/api/auth/me')
-        .set('Authorization', 'Bearer me-token');
-      expect(res.status).toBe(200);
-      expect(res.body.data.user.email).toBe('juan@example.com');
-      expect(res.body.data.user.password).toBeUndefined();
-    });
-
-    it('should reject unauthenticated request', async () => {
-      const res = await request(app).get('/api/auth/me');
-      expect(res.status).toBe(401);
-    });
-  });
 });
