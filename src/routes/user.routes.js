@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { success, error } = require('../utils/response');
 const { authenticate } = require('../middleware/auth');
-const { users, addUserActivity, getUserActivities } = require('../data/data');
+const { users, addUserActivity, getUserActivities, findUserById } = require('../data/data');
 
 const router = Router();
 
@@ -14,7 +14,14 @@ const sanitizeUser = (user) => {
 };
 
 router.get('/me', authenticate, (req, res) => {
-  return success(res, { user: sanitizeUser(req.user) });
+  const userId = req.auth?.userId || req.user?.id;
+  const user = findUserById(userId);
+
+  if (!user) {
+    return error(res, 'Usuario no encontrado', 404);
+  }
+
+  return success(res, { user: sanitizeUser(user) });
 });
 
 router.get('/activities', authenticate, (req, res) => {

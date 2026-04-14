@@ -1,4 +1,5 @@
 const { findSessionByToken, findUserById } = require('../data/data');
+const { decodeToken } = require('../utils/token');
 const { error } = require('../utils/response');
 
 const authenticate = (req, res, next) => {
@@ -14,10 +15,13 @@ const authenticate = (req, res, next) => {
   if (new Date(session.expiresAt) < new Date()) {
     return error(res, 'Sesion expirada', 401);
   }
-  const user = findUserById(session.userId);
+  const tokenPayload = decodeToken(token);
+  const userId = tokenPayload?.userId || session.userId;
+  const user = findUserById(userId);
   if (!user) {
     return error(res, 'Usuario no encontrado', 401);
   }
+  req.auth = tokenPayload;
   req.user = user;
   req.session = session;
   next();
