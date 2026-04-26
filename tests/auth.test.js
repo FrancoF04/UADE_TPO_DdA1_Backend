@@ -1,5 +1,6 @@
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
+const { Buffer } = require('node:buffer');
 const app = require('../src/app');
 const { users, otpCodes, sessions } = require('../src/data/data');
 
