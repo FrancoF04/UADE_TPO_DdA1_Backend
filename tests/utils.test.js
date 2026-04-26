@@ -7,6 +7,7 @@ const {
 } = require('../src/utils/validation');
 const { generateOtp, isOtpExpired } = require('../src/utils/otp');
 const { success, error } = require('../src/utils/response');
+const { Buffer } = require('node:buffer');
 const { generateToken } = require('../src/utils/token');
 
 describe('Validation utils', () => {

@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { Buffer } = require('node:buffer');
 
 const generateToken = (payload = {}) => {
 	const tokenPayload = {
@@ -22,7 +23,7 @@ const decodeToken = (token) => {
 		}
 
 		return payload;
-	} catch (_error) {
+	} catch {
 		return null;
 	}
 };
