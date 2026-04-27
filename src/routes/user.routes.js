@@ -25,7 +25,7 @@ router.get('/me', authenticate, (req, res) => {
 });
 
 router.put('/me', authenticate, (req, res) => {
-  const { username, email, phoneNumber } = req.body;
+  const { username, email, phoneNumber, fullName } = req.body;
   const userId = req.auth?.userId || req.user?.id;
 
   const userIndex = users.findIndex((u) => u.id === userId);
@@ -37,6 +37,7 @@ router.put('/me', authenticate, (req, res) => {
   if (username) users[userIndex].username = username;
   if (email) users[userIndex].email = email;
   if (phoneNumber) users[userIndex].phoneNumber = phoneNumber;
+  if (fullName) users[userIndex].fullName = fullName;
 
   return success(res, { user: sanitizeUser(users[userIndex]) });
 });
