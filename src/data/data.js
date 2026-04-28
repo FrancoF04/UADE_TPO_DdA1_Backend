@@ -33,6 +33,38 @@ const users = [
 
 const otpCodes = [];
 const sessions = [];
+const bookings = [];
+const favorites = [];
+const ratings = [];
+const news = [
+  {
+    id: 'n1',
+    imageUrl: 'https://images.example.com/news-buenos-aires.jpg',
+    title: 'Promo especial en Buenos Aires',
+    description: 'Descuentos en actividades urbanas y gastronomicas durante abril y mayo.',
+    activityId: 'a1',
+    content:
+      'Promocion especial para recorridos guiados, con cupos limitados y beneficios para reservas anticipadas.',
+    createdAt: '2026-04-01T10:00:00Z',
+  },
+  {
+    id: 'n2',
+    imageUrl: 'https://images.example.com/news-mendoza.jpg',
+    title: 'Ofertas en experiencias de vino',
+    description: 'Tarifas promocionales para tours de bodegas y degustaciones premium.',
+    activityId: 'a7',
+    content: 'La temporada de vendimia incluye beneficios especiales para reservas flexibles.',
+    createdAt: '2026-04-05T10:00:00Z',
+  },
+  {
+    id: 'n3',
+    imageUrl: 'https://images.example.com/news-salta.jpg',
+    title: 'Destino destacado: Salta',
+    description: 'Nuevas salidas en excursiones de altura y experiencias gastronomicas regionales.',
+    content: 'Salta concentra varias de las experiencias destacadas del mes con alta demanda.',
+    createdAt: '2026-04-10T10:00:00Z',
+  },
+];
 
 const activities = [
   {
@@ -524,7 +556,14 @@ initPasswords();
 const findUserByEmail = (email) => users.find((u) => u.email === email);
 const findUserByUsername = (username) => users.find((u) => u.username === username);
 const findUserById = (id) => users.find((u) => u.id === id);
-const findSessionByToken = (token) => sessions.find((s) => s.token === token);
+const findSessionByToken = (token) => sessions.find((s) => s.token === token || s.refreshToken === token);
+
+const findBookingById = (bookingId) => bookings.find((booking) => booking.id === bookingId);
+
+const findFavorite = (userId, activityId) =>
+  favorites.find((favorite) => favorite.userId === userId && favorite.activityId === activityId);
+
+const findRatingByBookingId = (bookingId) => ratings.find((rating) => rating.bookingId === bookingId);
 
 const normalizeDateString = (value) => {
   if (typeof value !== 'string' || value.length === 0) {
@@ -569,7 +608,7 @@ const buildDynamicSchedules = (activity) => {
     normalizeUserActivities(user);
 
     user.activities
-      .filter((selection) => selection.activityId === activity.id)
+      .filter((selection) => selection.activityId === activity.id && selection.status === 'active')
       .forEach((selection) => {
         const scheduleKey =
           typeof selection.selectedScheduleId === 'string' && selection.selectedScheduleId.length > 0
@@ -688,6 +727,23 @@ const extractCancellationHours = (cancellationPolicy) => {
   return match ? parseInt(match[1], 10) : null;
 };
 
+const getCancellationDeadline = (selection, activity) => {
+  if (!selection || typeof selection.selectedDate !== 'string') {
+    return null;
+  }
+
+  const activityDate = new Date(selection.selectedDate);
+  if (Number.isNaN(activityDate.getTime())) {
+    return null;
+  }
+
+  const cancellationHours = Number.isFinite(selection.cancellationHours) && selection.cancellationHours >= 0
+    ? selection.cancellationHours
+    : extractCancellationHours(activity?.cancellationPolicy) ?? 0;
+
+  return new Date(activityDate.getTime() - (cancellationHours * 60 * 60 * 1000));
+};
+
 const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = null, quantity = 1) => {
   const user = findUserById(userId);
   if (!user) {
@@ -718,7 +774,8 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     (item) =>
       item.activityId === activityId
       && item.selectedDate === resolvedDate
-      && item.selectedScheduleId === resolvedScheduleId,
+      && item.selectedScheduleId === resolvedScheduleId
+      && item.status === 'active',
   );
 
   if (saved) {
@@ -745,10 +802,92 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
   };
   user.activities.push(activitySelection);
 
+  const bookingId = `b${Date.now()}-${bookings.length + 1}`;
+  bookings.push({
+    id: bookingId,
+    userId,
+    activityId,
+    selectedDate: resolvedDate,
+    selectedScheduleId: resolvedScheduleId,
+    quantity: validQuantity,
+    cancellationHours,
+    cancellationPolicy: activity.cancellationPolicy,
+    status: 'confirmed',
+    voucherCode: `VCH-${bookingId.toUpperCase()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
   // Decrementar los cupos disponibles en el schedule según la cantidad
   targetSchedule.availableSpots -= validQuantity;
 
   return activitySelection;
+};
+
+const cancelUserActivity = (userId, activityId, selectedScheduleId = null, selectedDate = null) => {
+  const user = findUserById(userId);
+  if (!user) {
+    return null;
+  }
+
+  normalizeUserActivities(user);
+
+  const activity = getDynamicActivityById(activityId);
+
+  const normalizedDate = normalizeDateString(selectedDate);
+  const targetSelection = user.activities.find((selection) => {
+    if (selection.activityId !== activityId || selection.status !== 'active') {
+      return false;
+    }
+
+    if (typeof selectedScheduleId === 'string' && selectedScheduleId.length > 0) {
+      return selection.selectedScheduleId === selectedScheduleId;
+    }
+
+    if (normalizedDate) {
+      return selection.selectedDate === normalizedDate;
+    }
+
+    return true;
+  });
+
+  if (!targetSelection) {
+    return null;
+  }
+
+  const cancellationDeadline = getCancellationDeadline(targetSelection, activity);
+  if (cancellationDeadline && Date.now() >= cancellationDeadline.getTime()) {
+    return {
+      blocked: true,
+      cancellationDeadline: cancellationDeadline.toISOString(),
+      selection: targetSelection,
+    };
+  }
+
+  targetSelection.status = 'cancelled';
+
+  const booking = bookings.find(
+    (item) =>
+      item.userId === userId
+      && item.activityId === activityId
+      && item.status !== 'cancelled'
+      && (
+        (typeof selectedScheduleId === 'string' && selectedScheduleId.length > 0
+          ? item.selectedScheduleId === selectedScheduleId
+          : false)
+        || (normalizedDate ? item.selectedDate === normalizedDate : false)
+      ),
+  );
+
+  if (booking) {
+    booking.status = 'cancelled';
+    booking.updatedAt = new Date().toISOString();
+  }
+
+  return {
+    blocked: false,
+    selection: targetSelection,
+  };
 };
 
 const getUserActivities = (userId) => {
@@ -776,6 +915,12 @@ const removeSession = (token) => {
   const index = sessions.findIndex((s) => s.token === token);
   if (index !== -1) {
     sessions.splice(index, 1);
+    return;
+  }
+
+  const refreshIndex = sessions.findIndex((s) => s.refreshToken === token);
+  if (refreshIndex !== -1) {
+    sessions.splice(refreshIndex, 1);
   }
 };
 
@@ -787,23 +932,206 @@ const invalidateOtpsForEmail = (email) => {
   });
 };
 
+const normalizeBookingStatuses = () => {
+  const now = Date.now();
+
+  bookings.forEach((booking) => {
+    if (booking.status !== 'confirmed') {
+      return;
+    }
+
+    const bookingDate = new Date(booking.selectedDate);
+    if (!Number.isNaN(bookingDate.getTime()) && bookingDate.getTime() < now) {
+      booking.status = 'finalized';
+      booking.updatedAt = new Date().toISOString();
+    }
+  });
+};
+
+const getUserBookings = (userId) => {
+  normalizeBookingStatuses();
+  return bookings.filter((booking) => booking.userId === userId);
+};
+
+const getBookingById = (bookingId) => {
+  normalizeBookingStatuses();
+  return findBookingById(bookingId);
+};
+
+const addFavorite = (userId, activityId) => {
+  const activity = getDynamicActivityById(activityId);
+  if (!activity) {
+    return null;
+  }
+
+  const existing = findFavorite(userId, activityId);
+  if (existing) {
+    return existing;
+  }
+
+  const favorite = {
+    userId,
+    activityId,
+    priceAtFavorite: activity.price,
+    currencyAtFavorite: activity.currency,
+    spotsAtFavorite: activity.availableSpots,
+    createdAt: new Date().toISOString(),
+  };
+
+  favorites.push(favorite);
+  return favorite;
+};
+
+const removeFavorite = (userId, activityId) => {
+  const index = favorites.findIndex(
+    (favorite) => favorite.userId === userId && favorite.activityId === activityId,
+  );
+
+  if (index === -1) {
+    return false;
+  }
+
+  favorites.splice(index, 1);
+  return true;
+};
+
+const getFavoritesByUser = (userId) => favorites.filter((favorite) => favorite.userId === userId);
+
+const addRating = (rating) => {
+  const existing = findRatingByBookingId(rating.bookingId);
+  if (existing) {
+    return null;
+  }
+
+  ratings.push(rating);
+  return rating;
+};
+
+const getRatingByBooking = (bookingId) => findRatingByBookingId(bookingId);
+
+const getRatingsByUser = (userId) => ratings.filter((rating) => rating.userId === userId);
+
+const getBookingsSummaryForUser = (userId) => {
+  const userBookings = getUserBookings(userId);
+  const summary = userBookings.reduce(
+    (accumulator, booking) => {
+      accumulator.total += 1;
+      accumulator.byStatus[booking.status] = (accumulator.byStatus[booking.status] || 0) + 1;
+
+      if (booking.status === 'confirmed') {
+        accumulator.upcoming += 1;
+      }
+
+      if (booking.status === 'finalized') {
+        accumulator.completed += 1;
+      }
+
+      if (booking.status !== 'cancelled') {
+        const activity = getDynamicActivityById(booking.activityId);
+        accumulator.totalSpent += Number(activity?.price || 0) * Number(booking.quantity || 1);
+      }
+
+      return accumulator;
+    },
+    {
+      total: 0,
+      confirmed: 0,
+      cancelled: 0,
+      finalized: 0,
+      upcoming: 0,
+      completed: 0,
+      totalSpent: 0,
+      byStatus: {},
+    },
+  );
+
+  summary.confirmed = summary.byStatus.confirmed || 0;
+  summary.cancelled = summary.byStatus.cancelled || 0;
+  summary.finalized = summary.byStatus.finalized || 0;
+
+  return summary;
+};
+
+const getActivityHistoryForUser = (userId) => {
+  const userBookings = getUserBookings(userId).filter((booking) => booking.status === 'finalized');
+
+  return userBookings.map((booking) => {
+    const activity = getDynamicActivityById(booking.activityId);
+    return {
+      bookingId: booking.id,
+      activityId: booking.activityId,
+      activityName: activity?.name || '',
+      destination: activity?.destination || '',
+      guide: activity?.guide || null,
+      duration: activity?.duration || '',
+      date: booking.selectedDate,
+    };
+  });
+};
+
+const getOfflineBundleForUser = (userId) => {
+  const userBookings = getUserBookings(userId).filter((booking) => booking.status === 'confirmed');
+  return userBookings.map((booking) => ({
+    booking,
+    activity: getDynamicActivityById(booking.activityId),
+  }));
+};
+
+const getSyncChangesSince = (since) => {
+  const sinceDate = since ? new Date(since) : null;
+  const normalizedSince = sinceDate && !Number.isNaN(sinceDate.getTime()) ? sinceDate.getTime() : 0;
+
+  return bookings
+    .filter((booking) => {
+      const updatedAt = new Date(booking.updatedAt || booking.createdAt || new Date().toISOString());
+      return !Number.isNaN(updatedAt.getTime()) && updatedAt.getTime() >= normalizedSince;
+    })
+    .map((booking) => ({
+      bookingId: booking.id,
+      activityId: booking.activityId,
+      status: booking.status,
+      selectedDate: booking.selectedDate,
+      selectedScheduleId: booking.selectedScheduleId,
+      updatedAt: booking.updatedAt || booking.createdAt,
+      changeType: booking.status === 'cancelled' ? 'cancelled' : booking.status === 'finalized' ? 'finalized' : 'updated',
+    }));
+};
+
 module.exports = {
   users,
   otpCodes,
   sessions,
+  bookings,
+  favorites,
+  ratings,
+  news,
   activities,
   findUserByEmail,
   findUserByUsername,
   findUserById,
   findSessionByToken,
+  findBookingById,
   addUser,
   addOtp,
   addSession,
   removeSession,
   invalidateOtpsForEmail,
   addUserActivity,
+  cancelUserActivity,
   getUserActivities,
   getDynamicActivityById,
   getActivitiesWithDynamicAvailability,
+  addFavorite,
+  removeFavorite,
+  getFavoritesByUser,
+  addRating,
+  getRatingByBooking,
+  getRatingsByUser,
+  getBookingsSummaryForUser,
+  getActivityHistoryForUser,
+  getOfflineBundleForUser,
+  getSyncChangesSince,
+  getUserBookings,
+  getBookingById,
 };
 

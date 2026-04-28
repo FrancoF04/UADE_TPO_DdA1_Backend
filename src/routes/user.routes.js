@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/auth');
 const {
   users,
   addUserActivity,
+  cancelUserActivity,
   getUserActivities,
   findUserById,
   getDynamicActivityById,
@@ -29,6 +30,10 @@ const sanitizeUser = (user) => {
   if (!Array.isArray(sanitized.activities)) {
     sanitized.activities = [];
   }
+  sanitized.name = sanitized.fullName || '';
+  sanitized.phone = sanitized.phoneNumber || '';
+  sanitized.profilePhotoUrl = sanitized.profilePhotoUrl || sanitized.photoUrl || '';
+  sanitized.photoUrl = sanitized.profilePhotoUrl;
   return sanitized;
 };
 
@@ -58,7 +63,7 @@ router.get('/me', authenticate, (req, res) => {
 });
 
 router.put('/me', authenticate, (req, res) => {
-  const { username, email, phoneNumber, fullName } = req.body;
+  const { username, email, phoneNumber, fullName, photoUrl, profilePhotoUrl } = req.body;
   const userId = req.auth?.userId || req.user?.id;
 
   const userIndex = users.findIndex((u) => u.id === userId);
@@ -71,6 +76,8 @@ router.put('/me', authenticate, (req, res) => {
   if (email) users[userIndex].email = email;
   if (phoneNumber) users[userIndex].phoneNumber = phoneNumber;
   if (fullName) users[userIndex].fullName = fullName;
+  if (photoUrl) users[userIndex].profilePhotoUrl = photoUrl;
+  if (profilePhotoUrl) users[userIndex].profilePhotoUrl = profilePhotoUrl;
 
   return success(res, { user: sanitizeUser(users[userIndex]) });
 });
@@ -158,6 +165,34 @@ router.post('/activities', authenticate, (req, res) => {
     null,
     201,
   );
+});
+
+router.delete('/activities/:activityId/:selectedScheduleId', authenticate, (req, res) => {
+  const { activityId, selectedScheduleId } = req.params;
+
+  if (!activityId || typeof activityId !== 'string') {
+    return error(res, 'activityId es requerido', 400);
+  }
+
+  if (!selectedScheduleId || typeof selectedScheduleId !== 'string') {
+    return error(res, 'selectedScheduleId es requerido', 400);
+  }
+
+  const cancelledActivity = cancelUserActivity(
+    req.user.id,
+    activityId,
+    selectedScheduleId,
+  );
+
+  if (!cancelledActivity) {
+    return error(res, 'Actividad no encontrada para cancelar', 404);
+  }
+
+  if (cancelledActivity.blocked) {
+    return error(res, 'No se puede cancelar dentro del plazo permitido', 409);
+  }
+
+  return res.sendStatus(200);
 });
 
 router.put('/preferences', authenticate, (req, res) => {

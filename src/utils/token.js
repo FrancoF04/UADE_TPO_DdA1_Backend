@@ -5,8 +5,14 @@ const generateToken = (payload = {}) => {
 	const tokenPayload = {
 		userId: payload.userId || null,
 		fullName: payload.fullName || null,
+		type: payload.type || 'access',
+		issuedAt: new Date().toISOString(),
 		jti: crypto.randomUUID(),
 	};
+
+	if (payload.expiresAt) {
+		tokenPayload.expiresAt = payload.expiresAt;
+	}
 
 	return Buffer.from(JSON.stringify(tokenPayload)).toString('base64url');
 };
