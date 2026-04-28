@@ -327,10 +327,15 @@ describe('User endpoints', () => {
         .send({ activityId: 'a1', selectedScheduleId: 'a1-s2' });
 
       expect(response.status).toBe(201);
-      expect(response.body.data.activity).toEqual({
+      expect(response.body.data.detailedActivities).toHaveLength(1);
+      expect(response.body.data.detailedActivities[0]).toEqual({
         activityId: 'a1',
+        activityName: 'Walking Tour por San Telmo',
         selectedDate: '2026-04-17T10:00:00.000Z',
         selectedScheduleId: 'a1-s2',
+        quantity: 1,
+        cancellationHours: 24,
+        status: 'active',
       });
     });
 
