@@ -57,6 +57,24 @@ router.get('/me', authenticate, (req, res) => {
   return success(res, { user: sanitizeUser(user) });
 });
 
+router.put('/me', authenticate, (req, res) => {
+  const { username, email, phoneNumber, fullName } = req.body;
+  const userId = req.auth?.userId || req.user?.id;
+
+  const userIndex = users.findIndex((u) => u.id === userId);
+  if (userIndex === -1) {
+    return error(res, 'Usuario no encontrado', 404);
+  }
+
+  // Actualizar solo los campos proporcionados
+  if (username) users[userIndex].username = username;
+  if (email) users[userIndex].email = email;
+  if (phoneNumber) users[userIndex].phoneNumber = phoneNumber;
+  if (fullName) users[userIndex].fullName = fullName;
+
+  return success(res, { user: sanitizeUser(users[userIndex]) });
+});
+
 router.get('/activities', authenticate, (req, res) => {
   const rawActivities = getUserActivities(req.user.id) || [];
 
