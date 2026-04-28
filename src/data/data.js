@@ -674,6 +674,14 @@ const addUser = (user) => {
   return user;
 };
 
+const extractCancellationHours = (cancellationPolicy) => {
+  if (!cancellationPolicy || typeof cancellationPolicy !== 'string') {
+    return null;
+  }
+  const match = cancellationPolicy.match(/(\d+)\s*horas?/i);
+  return match ? parseInt(match[1], 10) : null;
+};
+
 const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = null) => {
   const user = findUserById(userId);
   if (!user) {
@@ -717,12 +725,19 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     return null;
   }
 
+  const cancellationHours = extractCancellationHours(activity.cancellationPolicy);
+
   const activitySelection = {
     activityId,
     selectedDate: resolvedDate,
     selectedScheduleId: resolvedScheduleId,
+    cancellationHours,
+    status: 'active',
   };
   user.activities.push(activitySelection);
+
+  // Decrementar los cupos disponibles en el schedule
+  targetSchedule.availableSpots -= 1;
 
   return activitySelection;
 };
