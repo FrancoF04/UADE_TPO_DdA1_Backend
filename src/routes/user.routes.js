@@ -32,6 +32,20 @@ const sanitizeUser = (user) => {
   return sanitized;
 };
 
+const mapToReservationResponse = (selection) => {
+  const activity = getDynamicActivityById(selection.activityId);
+
+  return {
+    activityId: selection.activityId,
+    activityName: typeof activity?.name === 'string' ? activity.name : '',
+    selectedDate: selection.selectedDate,
+    selectedScheduleId: selection.selectedScheduleId || null,
+    quantity: Number.isInteger(selection.quantity) && selection.quantity > 0 ? selection.quantity : 1,
+    cancellationHours: Number.isFinite(selection.cancellationHours) ? selection.cancellationHours : 0,
+    status: typeof selection.status === 'string' ? selection.status : 'active',
+  };
+};
+
 router.get('/me', authenticate, (req, res) => {
   const userId = req.auth?.userId || req.user?.id;
   const user = findUserById(userId);
@@ -44,12 +58,15 @@ router.get('/me', authenticate, (req, res) => {
 });
 
 router.get('/activities', authenticate, (req, res) => {
-  const activities = getUserActivities(req.user.id) || [];
-  return success(res, { activities });
+  const rawActivities = getUserActivities(req.user.id) || [];
+
+  const detailedActivities = rawActivities.map(mapToReservationResponse);
+
+  return success(res, { detailedActivities });
 });
 
 router.post('/activities', authenticate, (req, res) => {
-  const { activityId, selectedDate, selectedScheduleId } = req.body;
+  const { activityId, selectedDate, selectedScheduleId, quantity } = req.body;
 
   if (!activityId || typeof activityId !== 'string') {
     return error(res, 'activityId es requerido', 400);
@@ -61,6 +78,8 @@ router.post('/activities', authenticate, (req, res) => {
   ) {
     return error(res, 'selectedDate o selectedScheduleId es requerido', 400);
   }
+
+  const validQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
 
   const activity = getDynamicActivityById(activityId);
 
@@ -95,7 +114,7 @@ router.post('/activities', authenticate, (req, res) => {
     (item) => item.id === resolvedScheduleId || normalizeDateString(item.date) === resolvedDate,
   );
 
-  if (!targetSchedule || targetSchedule.availableSpots <= 0) {
+  if (!targetSchedule || targetSchedule.availableSpots < validQuantity) {
     return error(res, 'No hay cupos disponibles para la fecha seleccionada', 409);
   }
 
@@ -104,15 +123,20 @@ router.post('/activities', authenticate, (req, res) => {
     activityId,
     resolvedDate,
     resolvedScheduleId,
+    validQuantity,
   );
 
   if (!activitySelection) {
     return error(res, 'No hay cupos disponibles para la fecha seleccionada', 409);
   }
 
+  const rawActivities = getUserActivities(req.user.id) || [];
+
+  const detailedActivities = rawActivities.map(mapToReservationResponse);
+
   return success(
     res,
-    { activity: activitySelection, activities: getUserActivities(req.user.id) || [] },
+    { detailedActivities },
     null,
     201,
   );

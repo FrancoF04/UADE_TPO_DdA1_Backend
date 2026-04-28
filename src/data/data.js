@@ -663,6 +663,12 @@ const normalizeUserActivities = (user) => {
         selectedDate: normalizeDateString(entry.selectedDate),
         selectedScheduleId:
           typeof entry.selectedScheduleId === 'string' ? entry.selectedScheduleId : null,
+        quantity: Number.isInteger(entry.quantity) && entry.quantity > 0 ? entry.quantity : 1,
+        cancellationHours:
+          Number.isFinite(entry.cancellationHours) && entry.cancellationHours >= 0
+            ? entry.cancellationHours
+            : 0,
+        status: typeof entry.status === 'string' ? entry.status : 'active',
       };
     })
     .filter(Boolean);
@@ -682,7 +688,7 @@ const extractCancellationHours = (cancellationPolicy) => {
   return match ? parseInt(match[1], 10) : null;
 };
 
-const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = null) => {
+const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = null, quantity = 1) => {
   const user = findUserById(userId);
   if (!user) {
     return null;
@@ -692,6 +698,8 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
   if (!activity) {
     return null;
   }
+
+  const validQuantity = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
 
   normalizeUserActivities(user);
 
@@ -721,7 +729,7 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     (item) => item.id === resolvedScheduleId || normalizeDateString(item.date) === resolvedDate,
   );
 
-  if (!targetSchedule || targetSchedule.availableSpots <= 0) {
+  if (!targetSchedule || targetSchedule.availableSpots < validQuantity) {
     return null;
   }
 
@@ -731,13 +739,14 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     activityId,
     selectedDate: resolvedDate,
     selectedScheduleId: resolvedScheduleId,
+    quantity: validQuantity,
     cancellationHours,
     status: 'active',
   };
   user.activities.push(activitySelection);
 
-  // Decrementar los cupos disponibles en el schedule
-  targetSchedule.availableSpots -= 1;
+  // Decrementar los cupos disponibles en el schedule según la cantidad
+  targetSchedule.availableSpots -= validQuantity;
 
   return activitySelection;
 };

@@ -130,7 +130,7 @@ describe('User endpoints', () => {
         .set('Authorization', 'Bearer activities-token');
 
       expect(res.status).toBe(200);
-      expect(res.body.data.activities).toEqual([]);
+      expect(res.body.data.detailedActivities).toEqual([]);
     });
 
     it('should return saved activity ids', async () => {
@@ -150,11 +150,15 @@ describe('User endpoints', () => {
         .set('Authorization', 'Bearer list-token');
 
       expect(res.status).toBe(200);
-      expect(res.body.data.activities).toHaveLength(1);
-      expect(res.body.data.activities[0]).toEqual({
+      expect(res.body.data.detailedActivities).toHaveLength(1);
+      expect(res.body.data.detailedActivities[0]).toEqual({
         activityId: 'a1',
+        activityName: 'Walking Tour por San Telmo',
         selectedDate: '2026-04-10T10:00:00.000Z',
         selectedScheduleId: 'a1-s1',
+        quantity: 1,
+        cancellationHours: 24,
+        status: 'active',
       });
     });
   });
@@ -173,12 +177,16 @@ describe('User endpoints', () => {
         .send({ activityId: 'a1', selectedDate: '2026-04-10T10:00:00Z' });
 
       expect(firstResponse.status).toBe(201);
-      expect(firstResponse.body.data.activity).toEqual({
+      expect(firstResponse.body.data.detailedActivities).toHaveLength(1);
+      expect(firstResponse.body.data.detailedActivities[0]).toEqual({
         activityId: 'a1',
+        activityName: 'Walking Tour por San Telmo',
         selectedDate: '2026-04-10T10:00:00.000Z',
         selectedScheduleId: 'a1-s1',
+        quantity: 1,
+        cancellationHours: 24,
+        status: 'active',
       });
-      expect(firstResponse.body.data.activities).toHaveLength(1);
     });
 
     it('should save an activity by schedule id', async () => {
@@ -194,10 +202,15 @@ describe('User endpoints', () => {
         .send({ activityId: 'a1', selectedScheduleId: 'a1-s2' });
 
       expect(response.status).toBe(201);
-      expect(response.body.data.activity).toEqual({
+      expect(response.body.data.detailedActivities).toHaveLength(1);
+      expect(response.body.data.detailedActivities[0]).toEqual({
         activityId: 'a1',
+        activityName: 'Walking Tour por San Telmo',
         selectedDate: '2026-04-17T10:00:00.000Z',
         selectedScheduleId: 'a1-s2',
+        quantity: 1,
+        cancellationHours: 24,
+        status: 'active',
       });
     });
 
