@@ -28,6 +28,18 @@ describe('Activity endpoints', () => {
       expect(res.body.meta.limit).toBe(10);
       expect(res.body.meta.total).toBe(activities.length);
       expect(res.body.data.length).toBeLessThanOrEqual(10);
+      expect(Array.isArray(res.body.data[0].schedules)).toBe(true);
+      expect(res.body.data[0].schedules.length).toBeGreaterThan(0);
+      expect(Array.isArray(res.body.data[0].dateTimes)).toBe(true);
+      expect(res.body.data[0].dateTimes.length).toBeGreaterThan(0);
+      expect(res.body.data[0].dateTimes[0]).toEqual(
+        expect.objectContaining({
+          date: expect.any(String),
+          time: expect.any(String),
+        }),
+      );
+      expect(typeof res.body.data[0].schedules[0].availableSpots).toBe('number');
+      expect(typeof res.body.data[0].schedules[0].totalSpots).toBe('number');
     });
 
     it('should support custom page and limit', async () => {
@@ -59,6 +71,18 @@ describe('Activity endpoints', () => {
       });
     });
 
+    it('should filter by date against all available dates', async () => {
+      const res = await request(app).get('/api/activities?date=2026-04-10');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      res.body.data.forEach((activity) => {
+        expect(Array.isArray(activity.dates)).toBe(true);
+        const matchesDate = activity.dates.some((activityDate) => activityDate.startsWith('2026-04-10'));
+        expect(matchesDate).toBe(true);
+      });
+    });
+
     it('should filter by price range', async () => {
       const res = await request(app).get('/api/activities?priceMin=10000&priceMax=30000');
       expect(res.status).toBe(200);
@@ -87,6 +111,10 @@ describe('Activity endpoints', () => {
       expect(res.body.success).toBe(true);
       res.body.data.forEach((activity) => {
         expect(activity.featured).toBe(true);
+        expect(Array.isArray(activity.dates)).toBe(true);
+        expect(Array.isArray(activity.schedules)).toBe(true);
+        expect(activity.dates.length).toBeGreaterThan(1);
+        expect(activity.schedules.length).toBeGreaterThan(1);
       });
     });
 
@@ -129,11 +157,14 @@ describe('Activity endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.destinations).toBeInstanceOf(Array);
       expect(res.body.data.categories).toBeInstanceOf(Array);
+      expect(res.body.data.dates).toBeInstanceOf(Array);
       expect(res.body.data.destinations.length).toBeGreaterThan(0);
       expect(res.body.data.categories.length).toBeGreaterThan(0);
+      expect(res.body.data.dates.length).toBeGreaterThan(0);
       // Check uniqueness
       expect(new Set(res.body.data.destinations).size).toBe(res.body.data.destinations.length);
       expect(new Set(res.body.data.categories).size).toBe(res.body.data.categories.length);
+      expect(new Set(res.body.data.dates).size).toBe(res.body.data.dates.length);
     });
   });
 
@@ -143,6 +174,12 @@ describe('Activity endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.id).toBe('a1');
       expect(res.body.data.name).toBeDefined();
+      expect(Array.isArray(res.body.data.dates)).toBe(true);
+      expect(Array.isArray(res.body.data.dateTimes)).toBe(true);
+      expect(Array.isArray(res.body.data.schedules)).toBe(true);
+      expect(res.body.data.schedules[0].id).toBeDefined();
+      expect(typeof res.body.data.schedules[0].availableSpots).toBe('number');
+      expect(typeof res.body.data.schedules[0].totalSpots).toBe('number');
     });
 
     it('should return 404 for invalid id', async () => {

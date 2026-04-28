@@ -1,9 +1,28 @@
 const { Router } = require('express');
 const { success, error } = require('../utils/response');
 const { authenticate } = require('../middleware/auth');
-const { users, addUserActivity, getUserActivities, findUserById } = require('../data/data');
+const {
+  users,
+  addUserActivity,
+  getUserActivities,
+  findUserById,
+  getDynamicActivityById,
+} = require('../data/data');
 
 const router = Router();
+
+const normalizeDateString = (value) => {
+  if (typeof value !== 'string' || value.length === 0) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toISOString();
+};
 
 const sanitizeUser = (user) => {
   const { password: _password, ...sanitized } = user;
@@ -48,19 +67,73 @@ router.get('/activities', authenticate, (req, res) => {
 });
 
 router.post('/activities', authenticate, (req, res) => {
-  const { activityId } = req.body;
+  const { activityId, selectedDate, selectedScheduleId } = req.body;
 
   if (!activityId || typeof activityId !== 'string') {
     return error(res, 'activityId es requerido', 400);
   }
 
-  const activity = addUserActivity(req.user.id, activityId);
+  if (
+    (!selectedDate || typeof selectedDate !== 'string')
+    && (!selectedScheduleId || typeof selectedScheduleId !== 'string')
+  ) {
+    return error(res, 'selectedDate o selectedScheduleId es requerido', 400);
+  }
+
+  const activity = getDynamicActivityById(activityId);
 
   if (!activity) {
     return error(res, 'Actividad no encontrada', 404);
   }
 
-  return success(res, { activityId: activity, activities: getUserActivities(req.user.id) || [] }, null, 201);
+  const schedules = Array.isArray(activity.schedules) ? activity.schedules : [];
+  let resolvedDate = normalizeDateString(selectedDate);
+  let resolvedScheduleId = typeof selectedScheduleId === 'string' ? selectedScheduleId : null;
+
+  if (resolvedScheduleId) {
+    const schedule = schedules.find((item) => item.id === resolvedScheduleId);
+    if (!schedule) {
+      return error(res, 'selectedScheduleId no disponible para la actividad', 400);
+    }
+    resolvedDate = normalizeDateString(schedule.date);
+  }
+
+  const availableDates = (activity.dates || []).map(normalizeDateString);
+
+  if (!resolvedDate || !availableDates.includes(resolvedDate)) {
+    return error(res, 'selectedDate no disponible para la actividad', 400);
+  }
+
+  if (!resolvedScheduleId) {
+    const matchingSchedule = schedules.find((item) => item.date === resolvedDate);
+    resolvedScheduleId = matchingSchedule?.id || null;
+  }
+
+  const targetSchedule = schedules.find(
+    (item) => item.id === resolvedScheduleId || normalizeDateString(item.date) === resolvedDate,
+  );
+
+  if (!targetSchedule || targetSchedule.availableSpots <= 0) {
+    return error(res, 'No hay cupos disponibles para la fecha seleccionada', 409);
+  }
+
+  const activitySelection = addUserActivity(
+    req.user.id,
+    activityId,
+    resolvedDate,
+    resolvedScheduleId,
+  );
+
+  if (!activitySelection) {
+    return error(res, 'No hay cupos disponibles para la fecha seleccionada', 409);
+  }
+
+  return success(
+    res,
+    { activity: activitySelection, activities: getUserActivities(req.user.id) || [] },
+    null,
+    201,
+  );
 });
 
 router.put('/preferences', authenticate, (req, res) => {
