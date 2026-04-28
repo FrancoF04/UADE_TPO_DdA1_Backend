@@ -1,35 +1,93 @@
 const { Router } = require('express');
-const { getActivitiesWithDynamicAvailability, getDynamicActivityById } = require('../data/data');
-const { success, error } = require('../utils/response');
 const { authenticate } = require('../middleware/auth');
+const { success, error } = require('../utils/response');
+const { getPagination, paginate } = require('../utils/pagination');
+const { serializeActivity } = require('../utils/activityView');
+const {
+  getActivitiesWithDynamicAvailability,
+  getDynamicActivityById,
+  getActivityHistoryForUser,
+  getRatingsByUser,
+  getBookingById,
+  findSessionByToken,
+  findUserById,
+} = require('../data/data');
 
 const router = Router();
 
-const serializeActivity = (activity) => activity;
+const getOptionalAuthenticatedUser = (req) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.split(' ')[1];
+  const session = findSessionByToken(token);
+  if (!session || new Date(session.expiresAt) < new Date()) {
+    return null;
+  }
+
+  return findUserById(session.userId);
+};
 
 router.get('/featured', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 5;
   const featured = getActivitiesWithDynamicAvailability()
-    .filter((a) => a.featured === true)
+    .filter((activity) => activity.featured === true)
     .slice(0, limit)
-    .map(serializeActivity);
+    .map((activity) => serializeActivity(activity));
+
   return success(res, featured);
 });
 
 router.get('/recommended', authenticate, (req, res) => {
   const { categories = [], destinations = [] } = req.user.preferences || {};
   const recommended = getActivitiesWithDynamicAvailability().filter(
-    (a) => categories.includes(a.category) || destinations.includes(a.destination),
+    (activity) => categories.includes(activity.category) || destinations.includes(activity.destination),
   );
-  return success(res, recommended.map(serializeActivity));
+
+  return success(res, recommended.map((activity) => serializeActivity(activity)));
 });
 
 router.get('/filters', (_req, res) => {
   const activityList = getActivitiesWithDynamicAvailability();
-  const destinations = [...new Set(activityList.map((a) => a.destination))];
-  const categories = [...new Set(activityList.map((a) => a.category))];
-  const dates = [...new Set(activityList.flatMap((a) => a.dates || []))];
+  const destinations = [...new Set(activityList.map((activity) => activity.destination))];
+  const categories = [...new Set(activityList.map((activity) => activity.category))];
+  const dates = [...new Set(activityList.flatMap((activity) => activity.dates || []))];
+
   return success(res, { destinations, categories, dates });
+});
+
+router.get('/history', authenticate, (req, res) => {
+  const pagination = getPagination(req.query, 10, 100);
+  const { fecha_desde, fecha_hasta, destination } = req.query;
+
+  let history = getActivityHistoryForUser(req.user.id) || [];
+
+  if (fecha_desde) {
+    const from = new Date(fecha_desde);
+    if (!Number.isNaN(from.getTime())) {
+      history = history.filter((item) => new Date(item.date).getTime() >= from.getTime());
+    }
+  }
+
+  if (fecha_hasta) {
+    const to = new Date(fecha_hasta);
+    if (!Number.isNaN(to.getTime())) {
+      history = history.filter((item) => new Date(item.date).getTime() <= to.getTime());
+    }
+  }
+
+  if (destination) {
+    history = history.filter((item) => item.destination === destination);
+  }
+
+  return success(res, paginate(history, pagination), {
+    total: history.length,
+    page: pagination.page,
+    page_size: pagination.pageSize,
+    limit: pagination.limit,
+  });
 });
 
 router.get('/:id', (req, res) => {
@@ -37,37 +95,67 @@ router.get('/:id', (req, res) => {
   if (!activity) {
     return error(res, 'Actividad no encontrada', 404);
   }
-  return success(res, serializeActivity(activity));
+
+  const user = getOptionalAuthenticatedUser(req);
+  let userRating = null;
+
+  if (user) {
+    const rating = getRatingsByUser(user.id).find((item) => {
+      const booking = getBookingById(item.bookingId);
+      return booking?.activityId === activity.id;
+    });
+
+    if (rating) {
+      userRating = {
+        bookingId: rating.bookingId,
+        activityRating: rating.activityRating,
+        guideRating: rating.guideRating,
+        comment: rating.comment,
+        createdAt: rating.createdAt,
+      };
+    }
+  }
+
+  return success(res, serializeActivity(activity, { userRating }));
 });
 
 router.get('/', (req, res) => {
-  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 10));
+  const pagination = getPagination(req.query, 10, 100);
   const { destination, category, date, priceMin, priceMax } = req.query;
 
   let filtered = getActivitiesWithDynamicAvailability();
 
   if (destination) {
-    filtered = filtered.filter((a) => a.destination === destination);
+    filtered = filtered.filter((activity) => activity.destination === destination);
   }
+
   if (category) {
-    filtered = filtered.filter((a) => a.category === category);
+    filtered = filtered.filter((activity) => activity.category === category);
   }
+
   if (date) {
-    filtered = filtered.filter((a) => (a.dates || []).some((activityDate) => activityDate.startsWith(date)));
+    filtered = filtered.filter((activity) =>
+      (activity.dates || []).some((activityDate) => activityDate.startsWith(date)),
+    );
   }
+
   if (priceMin !== undefined) {
-    filtered = filtered.filter((a) => a.price >= parseFloat(priceMin));
+    filtered = filtered.filter((activity) => activity.price >= parseFloat(priceMin));
   }
+
   if (priceMax !== undefined) {
-    filtered = filtered.filter((a) => a.price <= parseFloat(priceMax));
+    filtered = filtered.filter((activity) => activity.price <= parseFloat(priceMax));
   }
 
   const total = filtered.length;
-  const start = (page - 1) * limit;
-  const paginated = filtered.slice(start, start + limit).map(serializeActivity);
+  const paginated = paginate(filtered, pagination).map((activity) => serializeActivity(activity));
 
-  return success(res, paginated, { total, page, limit });
+  return success(res, paginated, {
+    total,
+    page: pagination.page,
+    page_size: pagination.pageSize,
+    limit: pagination.limit,
+  });
 });
 
 module.exports = router;

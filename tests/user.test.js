@@ -151,15 +151,17 @@ describe('User endpoints', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.detailedActivities).toHaveLength(1);
-      expect(res.body.data.detailedActivities[0]).toEqual({
-        activityId: 'a1',
-        activityName: 'Walking Tour por San Telmo',
-        selectedDate: '2026-04-10T10:00:00.000Z',
-        selectedScheduleId: 'a1-s1',
-        quantity: 1,
-        cancellationHours: 24,
-        status: 'active',
-      });
+      expect(res.body.data.detailedActivities[0]).toEqual(
+        expect.objectContaining({
+          activityId: 'a1',
+          activityName: 'Walking Tour por San Telmo',
+          selectedDate: '2026-04-10T10:00:00.000Z',
+          selectedScheduleId: 'a1-s1',
+          quantity: 1,
+          cancellationHours: 24,
+          status: 'active',
+        }),
+      );
     });
   });
 
@@ -178,15 +180,17 @@ describe('User endpoints', () => {
 
       expect(firstResponse.status).toBe(201);
       expect(firstResponse.body.data.detailedActivities).toHaveLength(1);
-      expect(firstResponse.body.data.detailedActivities[0]).toEqual({
-        activityId: 'a1',
-        activityName: 'Walking Tour por San Telmo',
-        selectedDate: '2026-04-10T10:00:00.000Z',
-        selectedScheduleId: 'a1-s1',
-        quantity: 1,
-        cancellationHours: 24,
-        status: 'active',
-      });
+      expect(firstResponse.body.data.detailedActivities[0]).toEqual(
+        expect.objectContaining({
+          activityId: 'a1',
+          activityName: 'Walking Tour por San Telmo',
+          selectedDate: '2026-04-10T10:00:00.000Z',
+          selectedScheduleId: 'a1-s1',
+          quantity: 1,
+          cancellationHours: 24,
+          status: 'active',
+        }),
+      );
     });
 
     it('should save an activity by schedule id', async () => {
@@ -203,15 +207,17 @@ describe('User endpoints', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.detailedActivities).toHaveLength(1);
-      expect(response.body.data.detailedActivities[0]).toEqual({
-        activityId: 'a1',
-        activityName: 'Walking Tour por San Telmo',
-        selectedDate: '2026-04-17T10:00:00.000Z',
-        selectedScheduleId: 'a1-s2',
-        quantity: 1,
-        cancellationHours: 24,
-        status: 'active',
-      });
+      expect(response.body.data.detailedActivities[0]).toEqual(
+        expect.objectContaining({
+          activityId: 'a1',
+          activityName: 'Walking Tour por San Telmo',
+          selectedDate: '2026-04-17T10:00:00.000Z',
+          selectedScheduleId: 'a1-s2',
+          quantity: 1,
+          cancellationHours: 24,
+          status: 'active',
+        }),
+      );
     });
 
     it('should recalculate schedule availability after booking', async () => {
@@ -235,6 +241,97 @@ describe('User endpoints', () => {
       const after = await request(app).get('/api/activities/a1');
       expect(after.status).toBe(200);
       expect(after.body.data.schedules[0].availableSpots).toBe(0);
+    });
+
+    it('should cancel an activity and restore schedule availability', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-04-08T11:00:00Z'));
+
+      try {
+        sessions.push({
+          token: 'cancel-token',
+          userId: 'u1',
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        });
+
+        const booking = await request(app)
+          .post('/api/users/activities')
+          .set('Authorization', 'Bearer cancel-token')
+          .send({ activityId: 'a1', selectedScheduleId: 'a1-s1' });
+
+        expect(booking.status).toBe(201);
+
+        const cancellation = await request(app)
+          .delete('/api/users/activities/a1/a1-s1')
+          .set('Authorization', 'Bearer cancel-token')
+          .send();
+
+        expect(cancellation.status).toBe(200);
+
+        const after = await request(app).get('/api/activities/a1');
+        expect(after.status).toBe(200);
+        expect(after.body.data.schedules[0].availableSpots).toBe(1);
+
+        const userActivities = await request(app)
+          .get('/api/users/activities')
+          .set('Authorization', 'Bearer cancel-token');
+
+        expect(userActivities.status).toBe(200);
+        expect(userActivities.body.data.detailedActivities).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              selectedScheduleId: 'a1-s1',
+              status: 'cancelled',
+            }),
+          ]),
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('should reject cancellation inside the forbidden window', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-04-09T11:00:00Z'));
+
+      try {
+        sessions.push({
+          token: 'late-cancel-token',
+          userId: 'u1',
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        });
+
+        const booking = await request(app)
+          .post('/api/users/activities')
+          .set('Authorization', 'Bearer late-cancel-token')
+          .send({ activityId: 'a1', selectedScheduleId: 'a1-s1' });
+
+        expect(booking.status).toBe(201);
+
+        const cancellation = await request(app)
+          .delete('/api/users/activities/a1/a1-s1')
+          .set('Authorization', 'Bearer late-cancel-token')
+          .send();
+
+        expect(cancellation.status).toBe(409);
+        expect(cancellation.body.error).toBe('No se puede cancelar dentro del plazo permitido');
+
+        const userActivities = await request(app)
+          .get('/api/users/activities')
+          .set('Authorization', 'Bearer late-cancel-token');
+
+        expect(userActivities.status).toBe(200);
+        expect(userActivities.body.data.detailedActivities).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              selectedScheduleId: 'a1-s1',
+              status: 'active',
+            }),
+          ]),
+        );
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('should reject booking when no spots remain', async () => {

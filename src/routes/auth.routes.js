@@ -3,11 +3,13 @@ const bcrypt = require('bcryptjs');
 const {
   findUserByEmail,
   findUserByUsername,
+  findUserById,
   addUser,
   addOtp,
   addSession,
   removeSession,
   invalidateOtpsForEmail,
+  sessions,
   otpCodes,
 } = require('../data/data');
 const { success, error } = require('../utils/response');
@@ -23,6 +25,47 @@ const { generateToken } = require('../utils/token');
 const { authenticate } = require('../middleware/auth');
 
 const router = Router();
+
+const getSessionTtlMs = () => {
+  const minutes = parseInt(process.env.SESSION_TTL_MINUTES || '60', 10);
+  return Math.max(5, minutes) * 60 * 1000;
+};
+
+const getRefreshTtlMs = () => {
+  const days = parseInt(process.env.REFRESH_TOKEN_TTL_DAYS || '7', 10);
+  return Math.max(1, days) * 24 * 60 * 60 * 1000;
+};
+
+const issueSession = (user) => {
+  const accessExpiresAt = new Date(Date.now() + getSessionTtlMs()).toISOString();
+  const refreshExpiresAt = new Date(Date.now() + getRefreshTtlMs()).toISOString();
+  const token = generateToken({ userId: user.id, fullName: user.fullName, type: 'access', expiresAt: accessExpiresAt });
+  const refreshToken = generateToken({
+    userId: user.id,
+    fullName: user.fullName,
+    type: 'refresh',
+    expiresAt: refreshExpiresAt,
+  });
+
+  addSession({
+    token,
+    refreshToken,
+    userId: user.id,
+    expiresAt: accessExpiresAt,
+    refreshExpiresAt,
+  });
+
+  return { token, refreshToken, expiresAt: accessExpiresAt, refreshExpiresAt };
+};
+
+const extractBearerToken = (req) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  return authHeader.split(' ')[1];
+};
 
 router.post('/otp/request', (req, res) => {
   const { email } = req.body;
@@ -71,13 +114,12 @@ router.post('/otp/verify', (req, res) => {
       createdAt: new Date().toISOString(),
     });
   }
-  const token = generateToken({ userId: user.id, fullName: user.fullName });
-  addSession({
-    token,
-    userId: user.id,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  const session = issueSession(user);
+  return success(res, {
+    token: session.token,
+    accessToken: session.token,
+    refreshToken: session.refreshToken,
   });
-  return success(res, { token });
 });
 
 router.post('/otp/resend', (req, res) => {
@@ -133,13 +175,17 @@ router.post('/register', async (req, res) => {
     preferences: { categories: [], destinations: [] },
     createdAt: new Date().toISOString(),
   });
-  const token = generateToken({ userId: user.id, fullName: user.fullName });
-  addSession({
-    token,
-    userId: user.id,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-  });
-  return success(res, { token }, null, 201);
+  const session = issueSession(user);
+  return success(
+    res,
+    {
+      token: session.token,
+      accessToken: session.token,
+      refreshToken: session.refreshToken,
+    },
+    null,
+    201,
+  );
 });
 
 router.post('/login', async (req, res) => {
@@ -155,13 +201,42 @@ router.post('/login', async (req, res) => {
   if (!isMatch) {
     return error(res, 'Credenciales invalidas', 401);
   }
-  const token = generateToken({ userId: user.id, fullName: user.fullName });
-  addSession({
-    token,
-    userId: user.id,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  const session = issueSession(user);
+  return success(res, {
+    token: session.token,
+    accessToken: session.token,
+    refreshToken: session.refreshToken,
   });
-  return success(res, { token });
+});
+
+router.post('/refresh', (req, res) => {
+  const refreshToken = req.body.refreshToken || extractBearerToken(req);
+  if (!refreshToken) {
+    return error(res, 'Refresh token requerido', 400);
+  }
+
+  const session = sessions.find((item) => item.refreshToken === refreshToken || item.token === refreshToken);
+  if (!session) {
+    return error(res, 'Token invalido o expirado', 401);
+  }
+
+  if (session.refreshExpiresAt && new Date(session.refreshExpiresAt) < new Date()) {
+    return error(res, 'Sesion expirada', 401);
+  }
+
+  const user = findUserById(session.userId);
+  if (!user) {
+    return error(res, 'Usuario no encontrado', 401);
+  }
+
+  removeSession(session.token);
+  const refreshedSession = issueSession(user);
+
+  return success(res, {
+    token: refreshedSession.token,
+    accessToken: refreshedSession.token,
+    refreshToken: refreshedSession.refreshToken,
+  });
 });
 
 router.post('/logout', authenticate, (req, res) => {

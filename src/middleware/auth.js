@@ -16,6 +16,9 @@ const authenticate = (req, res, next) => {
     return error(res, 'Sesion expirada', 401);
   }
   const tokenPayload = decodeToken(token);
+  if (tokenPayload?.type === 'refresh') {
+    return error(res, 'Token invalido o expirado', 401);
+  }
   const userId = tokenPayload?.userId || session.userId;
   const user = findUserById(userId);
   if (!user) {
