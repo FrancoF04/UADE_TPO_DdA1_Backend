@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+﻿const bcrypt = require('bcryptjs');
 
 const users = [
   {
@@ -53,6 +53,7 @@ const activities = [
     availableSpots: 15,
     totalSpots: 20,
     date: '2026-04-10T10:00:00Z',
+    dates: buildAvailableDates('2026-04-10T10:00:00Z', 4, 7),
     meetingPoint: 'Plaza de Mayo, frente al Cabildo',
     guide: { name: 'Carlos Rodriguez', rating: 4.8 },
     language: 'Espanol',
@@ -79,6 +80,7 @@ const activities = [
     availableSpots: 20,
     totalSpots: 25,
     date: '2026-04-12T14:00:00Z',
+    dates: buildAvailableDates('2026-04-12T14:00:00Z', 4, 7),
     meetingPoint: 'Estacion La Boca del Premetro',
     guide: { name: 'Lucia Fernandez', rating: 4.9 },
     language: 'Espanol',
@@ -105,6 +107,7 @@ const activities = [
     availableSpots: 10,
     totalSpots: 30,
     date: '2026-04-15T11:00:00Z',
+    dates: buildAvailableDates('2026-04-15T11:00:00Z', 4, 7),
     meetingPoint: 'Entrada principal del Teatro Colon, Cerrito 628',
     guide: { name: 'Ana Martinez', rating: 4.7 },
     language: 'Espanol',
@@ -131,6 +134,7 @@ const activities = [
     availableSpots: 12,
     totalSpots: 15,
     date: '2026-04-18T15:00:00Z',
+    dates: buildAvailableDates('2026-04-18T15:00:00Z', 4, 7),
     meetingPoint: 'Lobby del MALBA, Av. Figueroa Alcorta 3415',
     guide: { name: 'Pablo Suarez', rating: 4.6 },
     language: 'Espanol',
@@ -157,6 +161,7 @@ const activities = [
     availableSpots: 8,
     totalSpots: 20,
     date: '2026-05-01T07:00:00Z',
+    dates: buildAvailableDates('2026-05-01T07:00:00Z', 4, 7),
     meetingPoint: 'Terminal de buses de El Calafate',
     guide: { name: 'Miguel Torres', rating: 4.9 },
     language: 'Espanol',
@@ -183,6 +188,7 @@ const activities = [
     availableSpots: 10,
     totalSpots: 15,
     date: '2026-04-20T08:00:00Z',
+    dates: buildAvailableDates('2026-04-20T08:00:00Z', 4, 7),
     meetingPoint: 'Base del Cerro Catedral, Bariloche',
     guide: { name: 'Federico Lopez', rating: 4.8 },
     language: 'Espanol',
@@ -209,6 +215,7 @@ const activities = [
     availableSpots: 6,
     totalSpots: 12,
     date: '2026-04-25T10:00:00Z',
+    dates: buildAvailableDates('2026-04-25T10:00:00Z', 4, 7),
     meetingPoint: 'Plaza Independencia, Mendoza',
     guide: { name: 'Valentina Rossi', rating: 4.9 },
     language: 'Espanol',
@@ -235,6 +242,7 @@ const activities = [
     availableSpots: 8,
     totalSpots: 10,
     date: '2026-04-14T12:00:00Z',
+    dates: buildAvailableDates('2026-04-14T12:00:00Z', 4, 7),
     meetingPoint: 'Parrilla Don Julio, Guatemala 4699, Palermo',
     guide: { name: 'Roberto Diaz', rating: 4.7 },
     language: 'Espanol',
@@ -261,6 +269,7 @@ const activities = [
     availableSpots: 5,
     totalSpots: 8,
     date: '2026-04-22T09:00:00Z',
+    dates: buildAvailableDates('2026-04-22T09:00:00Z', 4, 7),
     meetingPoint: 'Base de Potrerillos, Ruta 82 km 50',
     guide: { name: 'Martin Gutierrez', rating: 4.8 },
     language: 'Espanol',
@@ -287,6 +296,7 @@ const activities = [
     availableSpots: 10,
     totalSpots: 12,
     date: '2026-04-28T10:00:00Z',
+    dates: buildAvailableDates('2026-04-28T10:00:00Z', 4, 7),
     meetingPoint: 'Cerro Otto, Bariloche',
     guide: { name: 'Santiago Morales', rating: 4.7 },
     language: 'Espanol',
@@ -313,6 +323,7 @@ const activities = [
     availableSpots: 18,
     totalSpots: 25,
     date: '2026-04-16T09:00:00Z',
+    dates: buildAvailableDates('2026-04-16T09:00:00Z', 4, 7),
     meetingPoint: 'Plaza San Martin, Cordoba',
     guide: { name: 'Elena Vargas', rating: 4.6 },
     language: 'Espanol',
@@ -339,6 +350,7 @@ const activities = [
     availableSpots: 4,
     totalSpots: 40,
     date: '2026-05-05T06:00:00Z',
+    dates: buildAvailableDates('2026-05-05T06:00:00Z', 4, 7),
     meetingPoint: 'Estacion Salta, Ameghino 690',
     guide: { name: 'Jorge Pacheco', rating: 4.5 },
     language: 'Espanol',
@@ -365,6 +377,7 @@ const activities = [
     availableSpots: 15,
     totalSpots: 30,
     date: '2026-05-10T09:00:00Z',
+    dates: buildAvailableDates('2026-05-10T09:00:00Z', 4, 7),
     meetingPoint: 'Puerto turistico de Ushuaia',
     guide: { name: 'Camila Rios', rating: 4.8 },
     language: 'Espanol',
@@ -391,6 +404,7 @@ const activities = [
     availableSpots: 6,
     totalSpots: 8,
     date: '2026-05-08T08:00:00Z',
+    dates: buildAvailableDates('2026-05-08T08:00:00Z', 4, 7),
     meetingPoint: 'Angastaco, Ruta 40, Salta',
     guide: { name: 'Raul Condori', rating: 4.7 },
     language: 'Espanol',
@@ -417,6 +431,7 @@ const activities = [
     availableSpots: 10,
     totalSpots: 12,
     date: '2026-05-12T11:00:00Z',
+    dates: buildAvailableDates('2026-05-12T11:00:00Z', 4, 7),
     meetingPoint: 'Plaza 9 de Julio, Salta',
     guide: { name: 'Isabel Mamani', rating: 4.9 },
     language: 'Espanol',
@@ -426,6 +441,74 @@ const activities = [
     createdAt: '2026-03-05T10:00:00Z',
   },
 ];
+
+function buildAvailableDates(baseDate, count = 3, dayStep = 7) {
+  const parsed = new Date(baseDate);
+  if (Number.isNaN(parsed.getTime())) {
+    return [];
+  }
+
+  return Array.from({ length: count }, (_, index) => {
+    const next = new Date(parsed);
+    next.setUTCDate(next.getUTCDate() + index * dayStep);
+    return next.toISOString();
+  });
+}
+
+const buildActivitySchedules = (activity, dates) => {
+  const baseTotalSpots =
+    Number.isFinite(activity.totalSpots) && activity.totalSpots > 0 ? activity.totalSpots : 20;
+  const baseAvailableSpots =
+    Number.isFinite(activity.availableSpots) && activity.availableSpots >= 0
+      ? Math.min(activity.availableSpots, baseTotalSpots)
+      : Math.floor(baseTotalSpots * 0.75);
+
+  return dates.map((date, index) => ({
+    id: `${activity.id}-s${index + 1}`,
+    date,
+    availableSpots: Math.max(0, baseAvailableSpots - index),
+    totalSpots: baseTotalSpots,
+  }));
+};
+
+const buildActivityDateTimes = (activity) => {
+  const sourceDates = Array.isArray(activity.schedules) && activity.schedules.length > 0
+    ? activity.schedules.map((schedule) => schedule.date)
+    : Array.isArray(activity.dates) && activity.dates.length > 0
+      ? activity.dates
+      : typeof activity.date === 'string' && activity.date.length > 0
+        ? [activity.date]
+        : [];
+
+  return sourceDates
+    .map((value) => {
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) {
+        return null;
+      }
+
+      const iso = parsed.toISOString();
+      return {
+        date: iso.slice(0, 10),
+        time: iso.slice(11, 16),
+      };
+    })
+    .filter(Boolean);
+};
+
+activities.forEach((activity) => {
+  if (!Array.isArray(activity.dates) || activity.dates.length === 0) {
+    activity.dates = buildAvailableDates(activity.date);
+  }
+
+  if (!Array.isArray(activity.schedules) || activity.schedules.length === 0) {
+    activity.schedules = buildActivitySchedules(activity, activity.dates);
+  }
+
+  if (!Array.isArray(activity.dateTimes) || activity.dateTimes.length === 0) {
+    activity.dateTimes = buildActivityDateTimes(activity);
+  }
+});
 
 const initPasswords = async () => {
   if (users[0]) {
@@ -443,34 +526,205 @@ const findUserByUsername = (username) => users.find((u) => u.username === userna
 const findUserById = (id) => users.find((u) => u.id === id);
 const findSessionByToken = (token) => sessions.find((s) => s.token === token);
 
-const addUser = (user) => {
-  if (!Array.isArray(user.activities)) {
-    user.activities = [];
-  }
-  users.push(user);
-  return user;
-};
-
-const addUserActivity = (userId, activityId) => {
-  const user = findUserById(userId);
-  if (!user) {
+const normalizeDateString = (value) => {
+  if (typeof value !== 'string' || value.length === 0) {
     return null;
   }
 
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toISOString();
+};
+
+const getActivityDates = (activity) => {
+  if (Array.isArray(activity.schedules) && activity.schedules.length > 0) {
+    return activity.schedules
+      .map((schedule) => (typeof schedule.date === 'string' ? schedule.date : null))
+      .filter(Boolean);
+  }
+
+  if (Array.isArray(activity.dates) && activity.dates.length > 0) {
+    return activity.dates;
+  }
+
+  if (typeof activity.date === 'string' && activity.date.length > 0) {
+    return [activity.date];
+  }
+
+  return [];
+};
+
+const buildDynamicSchedules = (activity) => {
+  const sourceSchedules =
+    Array.isArray(activity.schedules) && activity.schedules.length > 0
+      ? activity.schedules
+      : buildActivitySchedules(activity, getActivityDates(activity));
+
+  const reservationsByScheduleKey = new Map();
+
+  users.forEach((user) => {
+    normalizeUserActivities(user);
+
+    user.activities
+      .filter((selection) => selection.activityId === activity.id)
+      .forEach((selection) => {
+        const scheduleKey =
+          typeof selection.selectedScheduleId === 'string' && selection.selectedScheduleId.length > 0
+            ? selection.selectedScheduleId
+            : normalizeDateString(selection.selectedDate);
+
+        if (!scheduleKey) {
+          return;
+        }
+
+        reservationsByScheduleKey.set(
+          scheduleKey,
+          (reservationsByScheduleKey.get(scheduleKey) || 0) + 1,
+        );
+      });
+  });
+
+  return sourceSchedules.map((schedule) => {
+    const normalizedDate = normalizeDateString(schedule.date) || schedule.date;
+    const totalSpots =
+      Number.isFinite(schedule.totalSpots) && schedule.totalSpots > 0
+        ? schedule.totalSpots
+        : Number.isFinite(activity.totalSpots) && activity.totalSpots > 0
+          ? activity.totalSpots
+          : 20;
+
+    const scheduleKey =
+      typeof schedule.id === 'string' && schedule.id.length > 0 ? schedule.id : normalizedDate;
+    const usedSpots = scheduleKey ? reservationsByScheduleKey.get(scheduleKey) || 0 : 0;
+
+    return {
+      ...schedule,
+      date: normalizedDate,
+      totalSpots,
+      availableSpots: Math.max(totalSpots - usedSpots, 0),
+    };
+  });
+};
+
+const buildDynamicActivity = (activity) => {
+  const schedules = buildDynamicSchedules(activity);
+  const dates = schedules
+    .map((schedule) => (typeof schedule.date === 'string' ? schedule.date : null))
+    .filter(Boolean);
+  const dateTimes = buildActivityDateTimes({ ...activity, schedules, dates });
+
+  return {
+    ...activity,
+    schedules,
+    dates,
+    dateTimes,
+    availableSpots: schedules.reduce((sum, schedule) => sum + (schedule.availableSpots || 0), 0),
+    totalSpots: schedules.reduce((sum, schedule) => sum + (schedule.totalSpots || 0), 0),
+  };
+};
+
+const getDynamicActivityById = (activityId) => {
   const activity = activities.find((item) => item.id === activityId);
   if (!activity) {
     return null;
   }
 
+  return buildDynamicActivity(activity);
+};
+
+const getActivitiesWithDynamicAvailability = () => activities.map(buildDynamicActivity);
+
+const normalizeUserActivities = (user) => {
   if (!Array.isArray(user.activities)) {
     user.activities = [];
+    return;
   }
 
-  if (!user.activities.includes(activityId)) {
-    user.activities.push(activityId);
+  user.activities = user.activities
+    .map((entry) => {
+      if (typeof entry === 'string') {
+        const legacyActivity = activities.find((activity) => activity.id === entry);
+        const [defaultDate] = legacyActivity ? getActivityDates(legacyActivity) : [];
+        return {
+          activityId: entry,
+          selectedDate: defaultDate || null,
+        };
+      }
+
+      if (!entry || typeof entry.activityId !== 'string') {
+        return null;
+      }
+
+      return {
+        activityId: entry.activityId,
+        selectedDate: normalizeDateString(entry.selectedDate),
+        selectedScheduleId:
+          typeof entry.selectedScheduleId === 'string' ? entry.selectedScheduleId : null,
+      };
+    })
+    .filter(Boolean);
+};
+
+const addUser = (user) => {
+  normalizeUserActivities(user);
+  users.push(user);
+  return user;
+};
+
+const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = null) => {
+  const user = findUserById(userId);
+  if (!user) {
+    return null;
   }
 
-  return activityId;
+  const activity = getDynamicActivityById(activityId);
+  if (!activity) {
+    return null;
+  }
+
+  normalizeUserActivities(user);
+
+  const availableSchedules = Array.isArray(activity.schedules) ? activity.schedules : [];
+  const selectedSchedule = selectedScheduleId
+    ? availableSchedules.find((item) => item.id === selectedScheduleId)
+    : null;
+  const resolvedDate = normalizeDateString(selectedSchedule?.date || selectedDate);
+  const resolvedScheduleId = selectedSchedule?.id || selectedScheduleId;
+
+  if (!resolvedDate || typeof resolvedDate !== 'string') {
+    return null;
+  }
+
+  const saved = user.activities.find(
+    (item) =>
+      item.activityId === activityId
+      && item.selectedDate === resolvedDate
+      && item.selectedScheduleId === resolvedScheduleId,
+  );
+
+  if (saved) {
+    return saved;
+  }
+
+  const targetSchedule = availableSchedules.find(
+    (item) => item.id === resolvedScheduleId || normalizeDateString(item.date) === resolvedDate,
+  );
+
+  if (!targetSchedule || targetSchedule.availableSpots <= 0) {
+    return null;
+  }
+
+  const activitySelection = {
+    activityId,
+    selectedDate: resolvedDate,
+    selectedScheduleId: resolvedScheduleId,
+  };
+  user.activities.push(activitySelection);
+
+  return activitySelection;
 };
 
 const getUserActivities = (userId) => {
@@ -479,9 +733,7 @@ const getUserActivities = (userId) => {
     return null;
   }
 
-  if (!Array.isArray(user.activities)) {
-    user.activities = [];
-  }
+  normalizeUserActivities(user);
 
   return user.activities;
 };
@@ -527,4 +779,7 @@ module.exports = {
   invalidateOtpsForEmail,
   addUserActivity,
   getUserActivities,
+  getDynamicActivityById,
+  getActivitiesWithDynamicAvailability,
 };
+
