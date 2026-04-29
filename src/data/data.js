@@ -637,7 +637,7 @@ const buildDynamicSchedules = (activity) => {
       Object.fromEntries(reservationsByScheduleKey),
     );
     /* eslint-enable no-console */
-  } catch (e) {
+  } catch (_e) {
     // ignore debug failures
   }
 
@@ -833,7 +833,7 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
       bookingId, userId, activityId, finalScheduleId, validQuantity,
     );
     /* eslint-enable no-console */
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
 
