@@ -628,6 +628,19 @@ const buildDynamicSchedules = (activity) => {
       });
   });
 
+  // DEBUG: mostrar resumen de reservas por schedule cuando se construyen schedules
+  try {
+    /* eslint-disable no-console */
+    console.debug('[buildDynamicSchedules] activityId=%s sourceSchedules=%d reservations=%o',
+      activity.id,
+      Array.isArray(sourceSchedules) ? sourceSchedules.length : 0,
+      Object.fromEntries(reservationsByScheduleKey),
+    );
+    /* eslint-enable no-console */
+  } catch (e) {
+    // ignore debug failures
+  }
+
   return sourceSchedules.map((schedule) => {
     const normalizedDate = normalizeDateString(schedule.date) || schedule.date;
     const totalSpots =
@@ -781,6 +794,9 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     return null;
   }
 
+  // Usar siempre el ID del schedule encontrado para que buildDynamicSchedules pueda contar la reserva
+  const finalScheduleId = targetSchedule.id || resolvedScheduleId;
+
   const cancellationHours = extractCancellationHours(activity.cancellationPolicy);
   const bookingId = `b${Date.now()}-${bookings.length + 1}`;
 
@@ -788,7 +804,7 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     bookingId,
     activityId,
     selectedDate: resolvedDate,
-    selectedScheduleId: resolvedScheduleId,
+    selectedScheduleId: finalScheduleId,
     quantity: validQuantity,
     cancellationHours,
     status: 'active',
@@ -800,7 +816,7 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     userId,
     activityId,
     selectedDate: resolvedDate,
-    selectedScheduleId: resolvedScheduleId,
+    selectedScheduleId: finalScheduleId,
     quantity: validQuantity,
     cancellationHours,
     cancellationPolicy: activity.cancellationPolicy,
@@ -809,6 +825,17 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
+
+  // DEBUG: registro cuando se crea una reserva
+  try {
+    /* eslint-disable no-console */
+    console.debug('[addUserActivity] bookingId=%s userId=%s activityId=%s schedule=%s quantity=%d',
+      bookingId, userId, activityId, finalScheduleId, validQuantity,
+    );
+    /* eslint-enable no-console */
+  } catch (e) {
+    // ignore
+  }
 
   return activitySelection;
 };
@@ -864,6 +891,9 @@ const cancelUserActivity = (
   }
 
   targetSelection.status = 'cancelled';
+
+  // Los cupos se recalculan dinámicamente en buildDynamicSchedules
+  // (cuenta solo reservas activas), no es necesario mutarlos aquí.
 
   const booking = bookings.find(
     (item) =>
