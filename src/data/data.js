@@ -472,6 +472,33 @@ const activities = [
     featured: true,
     createdAt: '2026-03-05T10:00:00Z',
   },
+  {
+    id: 'a16',
+    name: 'Free Tour por Nuñez',
+    destination: 'Buenos Aires',
+    category: 'free_tour',
+    description:
+      'Descubre el colorido barrio de Nuñez, hogar del Monumental, estadio de River Plate.',
+    imageUrl: 'https://images.example.com/nuñez-tour.jpg',
+    galleryUrls: [
+      'https://images.example.com/nuñez-1.jpg',
+      'https://images.example.com/nuñez-2.jpg',
+    ],
+    duration: '1 hora',
+    price: 0,
+    currency: 'ARS',
+    availableSpots: 20,
+    totalSpots: 25,
+    date: '2026-04-29T20:50:00Z',
+    dates: buildAvailableDates('2026-04-29T20:50:00Z', 4, 7),
+    meetingPoint: 'Estacion Nuñez',
+    guide: { name: 'Lucia Fernandez', rating: 4.9 },
+    language: 'Espanol',
+    included: ['Guia profesional', 'Fotos del grupo'],
+    cancellationPolicy: 'Cancelacion gratuita hasta 12 horas antes',
+    featured: true,
+    createdAt: '2026-01-12T10:00:00Z',
+  },
 ];
 
 function buildAvailableDates(baseDate, count = 3, dayStep = 7) {
