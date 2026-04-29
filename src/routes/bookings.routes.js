@@ -199,6 +199,7 @@ const cancelBooking = (req, res) => {
     booking.activityId,
     booking.selectedScheduleId,
     booking.selectedDate,
+    booking.id,
   );
 
   if (!cancellation) {

@@ -610,6 +610,8 @@ const buildDynamicSchedules = (activity) => {
     user.activities
       .filter((selection) => selection.activityId === activity.id && selection.status === 'active')
       .forEach((selection) => {
+        const reservedQuantity =
+          Number.isInteger(selection.quantity) && selection.quantity > 0 ? selection.quantity : 1;
         const scheduleKey =
           typeof selection.selectedScheduleId === 'string' && selection.selectedScheduleId.length > 0
             ? selection.selectedScheduleId
@@ -621,10 +623,23 @@ const buildDynamicSchedules = (activity) => {
 
         reservationsByScheduleKey.set(
           scheduleKey,
-          (reservationsByScheduleKey.get(scheduleKey) || 0) + 1,
+          (reservationsByScheduleKey.get(scheduleKey) || 0) + reservedQuantity,
         );
       });
   });
+
+  // DEBUG: mostrar resumen de reservas por schedule cuando se construyen schedules
+  try {
+    /* eslint-disable no-console */
+    console.debug('[buildDynamicSchedules] activityId=%s sourceSchedules=%d reservations=%o',
+      activity.id,
+      Array.isArray(sourceSchedules) ? sourceSchedules.length : 0,
+      Object.fromEntries(reservationsByScheduleKey),
+    );
+    /* eslint-enable no-console */
+  } catch (e) {
+    // ignore debug failures
+  }
 
   return sourceSchedules.map((schedule) => {
     const normalizedDate = normalizeDateString(schedule.date) || schedule.date;
@@ -702,6 +717,7 @@ const normalizeUserActivities = (user) => {
         selectedDate: normalizeDateString(entry.selectedDate),
         selectedScheduleId:
           typeof entry.selectedScheduleId === 'string' ? entry.selectedScheduleId : null,
+        bookingId: typeof entry.bookingId === 'string' ? entry.bookingId : null,
         quantity: Number.isInteger(entry.quantity) && entry.quantity > 0 ? entry.quantity : 1,
         cancellationHours:
           Number.isFinite(entry.cancellationHours) && entry.cancellationHours >= 0
@@ -770,18 +786,6 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     return null;
   }
 
-  const saved = user.activities.find(
-    (item) =>
-      item.activityId === activityId
-      && item.selectedDate === resolvedDate
-      && item.selectedScheduleId === resolvedScheduleId
-      && item.status === 'active',
-  );
-
-  if (saved) {
-    return saved;
-  }
-
   const targetSchedule = availableSchedules.find(
     (item) => item.id === resolvedScheduleId || normalizeDateString(item.date) === resolvedDate,
   );
@@ -790,25 +794,29 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     return null;
   }
 
+  // Usar siempre el ID del schedule encontrado para que buildDynamicSchedules pueda contar la reserva
+  const finalScheduleId = targetSchedule.id || resolvedScheduleId;
+
   const cancellationHours = extractCancellationHours(activity.cancellationPolicy);
+  const bookingId = `b${Date.now()}-${bookings.length + 1}`;
 
   const activitySelection = {
+    bookingId,
     activityId,
     selectedDate: resolvedDate,
-    selectedScheduleId: resolvedScheduleId,
+    selectedScheduleId: finalScheduleId,
     quantity: validQuantity,
     cancellationHours,
     status: 'active',
   };
   user.activities.push(activitySelection);
 
-  const bookingId = `b${Date.now()}-${bookings.length + 1}`;
   bookings.push({
     id: bookingId,
     userId,
     activityId,
     selectedDate: resolvedDate,
-    selectedScheduleId: resolvedScheduleId,
+    selectedScheduleId: finalScheduleId,
     quantity: validQuantity,
     cancellationHours,
     cancellationPolicy: activity.cancellationPolicy,
@@ -818,13 +826,27 @@ const addUserActivity = (userId, activityId, selectedDate, selectedScheduleId = 
     updatedAt: new Date().toISOString(),
   });
 
-  // Decrementar los cupos disponibles en el schedule según la cantidad
-  targetSchedule.availableSpots -= validQuantity;
+  // DEBUG: registro cuando se crea una reserva
+  try {
+    /* eslint-disable no-console */
+    console.debug('[addUserActivity] bookingId=%s userId=%s activityId=%s schedule=%s quantity=%d',
+      bookingId, userId, activityId, finalScheduleId, validQuantity,
+    );
+    /* eslint-enable no-console */
+  } catch (e) {
+    // ignore
+  }
 
   return activitySelection;
 };
 
-const cancelUserActivity = (userId, activityId, selectedScheduleId = null, selectedDate = null) => {
+const cancelUserActivity = (
+  userId,
+  activityId,
+  selectedScheduleId = null,
+  selectedDate = null,
+  bookingId = null,
+) => {
   const user = findUserById(userId);
   if (!user) {
     return null;
@@ -838,6 +860,10 @@ const cancelUserActivity = (userId, activityId, selectedScheduleId = null, selec
   const targetSelection = user.activities.find((selection) => {
     if (selection.activityId !== activityId || selection.status !== 'active') {
       return false;
+    }
+
+    if (typeof bookingId === 'string' && bookingId.length > 0) {
+      return selection.bookingId === bookingId;
     }
 
     if (typeof selectedScheduleId === 'string' && selectedScheduleId.length > 0) {
@@ -866,11 +892,19 @@ const cancelUserActivity = (userId, activityId, selectedScheduleId = null, selec
 
   targetSelection.status = 'cancelled';
 
+  // Los cupos se recalculan dinámicamente en buildDynamicSchedules
+  // (cuenta solo reservas activas), no es necesario mutarlos aquí.
+
   const booking = bookings.find(
     (item) =>
       item.userId === userId
       && item.activityId === activityId
       && item.status !== 'cancelled'
+      && (
+        typeof bookingId === 'string' && bookingId.length > 0
+          ? item.id === bookingId
+          : true
+      )
       && (
         (typeof selectedScheduleId === 'string' && selectedScheduleId.length > 0
           ? item.selectedScheduleId === selectedScheduleId
