@@ -363,6 +363,100 @@ describe('User endpoints', () => {
       expect(secondBooking.body.error).toBe('No hay cupos disponibles para la fecha seleccionada');
     });
 
+    it('should allow multiple reservations by same user while total quantity stays within capacity', async () => {
+      sessions.push({
+        token: 'same-user-multi-token',
+        userId: 'u1',
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+
+      const activity = activities.find((item) => item.id === 'a1');
+      if (activity && Array.isArray(activity.schedules) && activity.schedules[0]) {
+        activity.schedules[0].totalSpots = 25;
+        activity.schedules[0].availableSpots = 25;
+      }
+
+      const firstBooking = await request(app)
+        .post('/api/users/activities')
+        .set('Authorization', 'Bearer same-user-multi-token')
+        .send({ activityId: 'a1', selectedScheduleId: 'a1-s1', quantity: 10 });
+
+      expect(firstBooking.status).toBe(201);
+
+      const secondBooking = await request(app)
+        .post('/api/users/activities')
+        .set('Authorization', 'Bearer same-user-multi-token')
+        .send({ activityId: 'a1', selectedScheduleId: 'a1-s1', quantity: 15 });
+
+      expect(secondBooking.status).toBe(201);
+
+      const thirdBooking = await request(app)
+        .post('/api/users/activities')
+        .set('Authorization', 'Bearer same-user-multi-token')
+        .send({ activityId: 'a1', selectedScheduleId: 'a1-s1', quantity: 1 });
+
+      expect(thirdBooking.status).toBe(409);
+      expect(thirdBooking.body.error).toBe('No hay cupos disponibles para la fecha seleccionada');
+
+      const after = await request(app).get('/api/activities/a1');
+      expect(after.status).toBe(200);
+      expect(after.body.data.schedules[0].availableSpots).toBe(0);
+    });
+
+    it('should release only cancelled reservation quantity and allow rebooking that amount', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-04-08T11:00:00Z'));
+
+      try {
+        sessions.push({
+          token: 'same-user-cancel-token',
+          userId: 'u1',
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        });
+
+        const activity = activities.find((item) => item.id === 'a1');
+        if (activity && Array.isArray(activity.schedules) && activity.schedules[0]) {
+          activity.schedules[0].totalSpots = 25;
+          activity.schedules[0].availableSpots = 25;
+        }
+
+        const firstBooking = await request(app)
+          .post('/api/users/activities')
+          .set('Authorization', 'Bearer same-user-cancel-token')
+          .send({ activityId: 'a1', selectedScheduleId: 'a1-s1', quantity: 10 });
+        expect(firstBooking.status).toBe(201);
+
+        const secondBooking = await request(app)
+          .post('/api/users/activities')
+          .set('Authorization', 'Bearer same-user-cancel-token')
+          .send({ activityId: 'a1', selectedScheduleId: 'a1-s1', quantity: 15 });
+        expect(secondBooking.status).toBe(201);
+
+        const cancelOne = await request(app)
+          .delete('/api/users/activities/a1/a1-s1')
+          .set('Authorization', 'Bearer same-user-cancel-token')
+          .send();
+        expect(cancelOne.status).toBe(200);
+
+        const afterCancel = await request(app).get('/api/activities/a1');
+        expect(afterCancel.status).toBe(200);
+        expect(afterCancel.body.data.schedules[0].availableSpots).toBe(10);
+
+        const rebookFreed = await request(app)
+          .post('/api/users/activities')
+          .set('Authorization', 'Bearer same-user-cancel-token')
+          .send({ activityId: 'a1', selectedScheduleId: 'a1-s1', quantity: 10 });
+
+        expect(rebookFreed.status).toBe(201);
+
+        const afterRebook = await request(app).get('/api/activities/a1');
+        expect(afterRebook.status).toBe(200);
+        expect(afterRebook.body.data.schedules[0].availableSpots).toBe(0);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('should reject when selectedDate and selectedScheduleId are missing', async () => {
       sessions.push({
         token: 'save-token-2',
