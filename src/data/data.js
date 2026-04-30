@@ -84,8 +84,8 @@ const activities = [
     currency: 'ARS',
     availableSpots: 15,
     totalSpots: 20,
-    date: '2026-04-10T10:00:00Z',
-    dates: buildAvailableDates('2026-04-10T10:00:00Z', 4, 7),
+    date: '2026-04-30T01:55:00Z',
+    dates: buildAvailableDates('2026-04-30T01:55:00Z', 4, 7),
     meetingPoint: 'Plaza de Mayo, frente al Cabildo',
     guide: { name: 'Carlos Rodriguez', rating: 4.8 },
     language: 'Espanol',
@@ -993,8 +993,18 @@ const invalidateOtpsForEmail = (email) => {
   });
 };
 
+const parseDurationMs = (duration) => {
+  if (!duration || typeof duration !== 'string') return 0;
+  const match = duration.match(/([\d.]+)\s*horas?/i);
+  return match ? parseFloat(match[1]) * 60 * 60 * 1000 : 0;
+};
+
+const ARGENTINA_OFFSET_MS = -3 * 60 * 60 * 1000;
+
 const normalizeBookingStatuses = () => {
-  const now = Date.now();
+  const nowUtc = Date.now();
+  // Comparamos contra la hora actual en Argentina (UTC-3)
+  const nowArgentina = nowUtc + ARGENTINA_OFFSET_MS;
 
   bookings.forEach((booking) => {
     if (booking.status !== 'confirmed') {
@@ -1002,7 +1012,18 @@ const normalizeBookingStatuses = () => {
     }
 
     const bookingDate = new Date(booking.selectedDate);
-    if (!Number.isNaN(bookingDate.getTime()) && bookingDate.getTime() < now) {
+    if (Number.isNaN(bookingDate.getTime())) return;
+
+    // Interpretamos selectedDate como hora local Argentina si no tiene offset explícito
+    const hasExplicitTz = /[zZ]$/.test(booking.selectedDate) || /[+-]\d\d:\d\d$/.test(booking.selectedDate);
+    const bookingMs = hasExplicitTz
+      ? bookingDate.getTime()
+      : bookingDate.getTime() - ARGENTINA_OFFSET_MS;
+
+    const activity = activities.find((a) => a.id === booking.activityId);
+    const endMs = bookingMs + parseDurationMs(activity?.duration);
+
+    if (endMs < nowArgentina) {
       booking.status = 'finalized';
       booking.updatedAt = new Date().toISOString();
     }
