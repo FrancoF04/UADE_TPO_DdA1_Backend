@@ -74,10 +74,10 @@ const activities = [
     category: 'free_tour',
     description:
       'Recorre las calles empedradas de San Telmo, el barrio mas antiguo de Buenos Aires. Visita la Plaza Dorrego, el Mercado de San Telmo y descubre la historia del tango.',
-    imageUrl: 'https://images.example.com/san-telmo-tour.jpg',
+    imageUrl: '/uploads/activities/a1_0.jpg',
     galleryUrls: [
-      'https://images.example.com/san-telmo-1.jpg',
-      'https://images.example.com/san-telmo-2.jpg',
+      '/uploads/activities/a1_1.jpg',
+      '/uploads/activities/a1_2.jpg',
     ],
     duration: '2.5 horas',
     price: 0,
@@ -101,11 +101,8 @@ const activities = [
     category: 'free_tour',
     description:
       'Descubre el colorido barrio de La Boca, hogar del Caminito y la Bombonera. Conoce la historia de la inmigracion italiana y el arte callejero.',
-    imageUrl: 'https://images.example.com/la-boca-tour.jpg',
-    galleryUrls: [
-      'https://images.example.com/la-boca-1.jpg',
-      'https://images.example.com/la-boca-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a2_0.jpg',
+    galleryUrls: [],
     duration: '2 horas',
     price: 0,
     currency: 'ARS',
@@ -128,10 +125,9 @@ const activities = [
     category: 'guided_visit',
     description:
       'Recorre uno de los teatros de opera mas importantes del mundo. Conoce su historia, arquitectura y los secretos detras del escenario.',
-    imageUrl: 'https://images.example.com/teatro-colon.jpg',
+    imageUrl: '/uploads/activities/a3_0.jpg',
     galleryUrls: [
-      'https://images.example.com/teatro-colon-1.jpg',
-      'https://images.example.com/teatro-colon-2.jpg',
+      '/uploads/activities/a3_1.jpg',
     ],
     duration: '1.5 horas',
     price: 8000,
@@ -155,10 +151,11 @@ const activities = [
     category: 'guided_visit',
     description:
       'Explora la coleccion de arte latinoamericano mas importante de Argentina. Obras de Frida Kahlo, Diego Rivera, Tarsila do Amaral y mas.',
-    imageUrl: 'https://images.example.com/malba.jpg',
+    imageUrl: '/uploads/activities/a4_0.jpg',
     galleryUrls: [
-      'https://images.example.com/malba-1.jpg',
-      'https://images.example.com/malba-2.jpg',
+      '/uploads/activities/a4_1.jpg',
+      '/uploads/activities/a4_2.jpg',
+      '/uploads/activities/a4_3.jpg',
     ],
     duration: '2 horas',
     price: 6000,
@@ -182,11 +179,8 @@ const activities = [
     category: 'excursion',
     description:
       'Visita el impresionante Glaciar Perito Moreno en el Parque Nacional Los Glaciares. Incluye navegacion por el Lago Argentino y pasarelas panoramicas.',
-    imageUrl: 'https://images.example.com/perito-moreno.jpg',
-    galleryUrls: [
-      'https://images.example.com/perito-moreno-1.jpg',
-      'https://images.example.com/perito-moreno-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a5_0.jpg',
+    galleryUrls: [],
     duration: '8 horas',
     price: 45000,
     currency: 'ARS',
@@ -209,10 +203,9 @@ const activities = [
     category: 'excursion',
     description:
       'Ascenso al Cerro Catedral con vistas panoramicas del Lago Nahuel Huapi. Ideal para amantes del senderismo y la naturaleza patagonica.',
-    imageUrl: 'https://images.example.com/cerro-catedral.jpg',
+    imageUrl: '/uploads/activities/a6_0.jpg',
     galleryUrls: [
-      'https://images.example.com/cerro-catedral-1.jpg',
-      'https://images.example.com/cerro-catedral-2.jpg',
+      '/uploads/activities/a6_1.jpg',
     ],
     duration: '6 horas',
     price: 25000,
@@ -236,11 +229,8 @@ const activities = [
     category: 'gastronomic',
     description:
       'Recorre las bodegas mas prestigiosas de Mendoza. Degustacion de Malbec, Cabernet Sauvignon y blend de alta gama con maridaje de quesos regionales.',
-    imageUrl: 'https://images.example.com/vinos-mendoza.jpg',
-    galleryUrls: [
-      'https://images.example.com/vinos-mendoza-1.jpg',
-      'https://images.example.com/vinos-mendoza-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a7_0.jpg',
+    galleryUrls: [],
     duration: '5 horas',
     price: 35000,
     currency: 'ARS',
@@ -263,11 +253,8 @@ const activities = [
     category: 'gastronomic',
     description:
       'Vivi la experiencia completa del asado argentino. Aprende a preparar chimichurri, cortes de carne y el arte del fuego. Incluye empanadas y vino.',
-    imageUrl: 'https://images.example.com/asado-argentino.jpg',
-    galleryUrls: [
-      'https://images.example.com/asado-1.jpg',
-      'https://images.example.com/asado-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a8_0.jpg',
+    galleryUrls: [],
     duration: '4 horas',
     price: 28000,
     currency: 'ARS',
@@ -290,10 +277,9 @@ const activities = [
     category: 'adventure',
     description:
       'Desafia los rapidos del Rio Mendoza con esta emocionante aventura de rafting. Apto para principiantes y expertos con diferentes niveles de dificultad.',
-    imageUrl: 'https://images.example.com/rafting-mendoza.jpg',
+    imageUrl: '/uploads/activities/a9_0.jpg',
     galleryUrls: [
-      'https://images.example.com/rafting-1.jpg',
-      'https://images.example.com/rafting-2.jpg',
+      '/uploads/activities/a9_1.jpg',
     ],
     duration: '3 horas',
     price: 30000,
@@ -317,10 +303,10 @@ const activities = [
     category: 'adventure',
     description:
       'Vola sobre los bosques patagonicos con la tirolesa mas larga de Sudamerica. Vistas espectaculares del Lago Nahuel Huapi y los Andes.',
-    imageUrl: 'https://images.example.com/tirolesa-bariloche.jpg',
+    imageUrl: '/uploads/activities/a10_0.jpg',
     galleryUrls: [
-      'https://images.example.com/tirolesa-1.jpg',
-      'https://images.example.com/tirolesa-2.jpg',
+      '/uploads/activities/a10_1.jpg',
+      '/uploads/activities/a10_2.jpg',
     ],
     duration: '2 horas',
     price: 22000,
@@ -344,11 +330,8 @@ const activities = [
     category: 'guided_visit',
     description:
       'Recorre la Manzana Jesuitica, la Catedral y el Cabildo de Cordoba. Conoce la historia colonial y la arquitectura barroca de la Docta.',
-    imageUrl: 'https://images.example.com/cordoba-historico.jpg',
-    galleryUrls: [
-      'https://images.example.com/cordoba-1.jpg',
-      'https://images.example.com/cordoba-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a11_0.jpg',
+    galleryUrls: [],
     duration: '3 horas',
     price: 5000,
     currency: 'ARS',
@@ -371,10 +354,11 @@ const activities = [
     category: 'excursion',
     description:
       'Viaja en el legendario Tren a las Nubes que alcanza los 4220 metros sobre el nivel del mar. Cruza puentes, tuneles y viaductos en la Puna saltena.',
-    imageUrl: 'https://images.example.com/tren-nubes.jpg',
+    imageUrl: '/uploads/activities/a12_0.png',
     galleryUrls: [
-      'https://images.example.com/tren-nubes-1.jpg',
-      'https://images.example.com/tren-nubes-2.jpg',
+      '/uploads/activities/a12_1.jpg',
+      '/uploads/activities/a12_2.jpg',
+      '/uploads/activities/a12_3.jpg',
     ],
     duration: '15 horas',
     price: 50000,
@@ -398,11 +382,8 @@ const activities = [
     category: 'excursion',
     description:
       'Navega por el Canal Beagle y visita la Isla de los Lobos, la Isla de los Pajaros y el Faro Les Eclaireurs. Avistaje de fauna marina.',
-    imageUrl: 'https://images.example.com/canal-beagle.jpg',
-    galleryUrls: [
-      'https://images.example.com/canal-beagle-1.jpg',
-      'https://images.example.com/canal-beagle-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a13_0.jpg',
+    galleryUrls: [],
     duration: '4 horas',
     price: 32000,
     currency: 'ARS',
@@ -425,11 +406,8 @@ const activities = [
     category: 'adventure',
     description:
       'Recorre a caballo las formaciones rocosas de la Quebrada de las Flechas. Paisajes unicos del noroeste argentino con guias baqueanos locales.',
-    imageUrl: 'https://images.example.com/cabalgata-salta.jpg',
-    galleryUrls: [
-      'https://images.example.com/cabalgata-1.jpg',
-      'https://images.example.com/cabalgata-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a14_0.jpg',
+    galleryUrls: [],
     duration: '4 horas',
     price: 20000,
     currency: 'ARS',
@@ -452,11 +430,8 @@ const activities = [
     category: 'gastronomic',
     description:
       'Proba las mejores empanadas saltenas en un recorrido por las casas de empanadas mas tradicionales. Aprende la receta original del repulgue salteno.',
-    imageUrl: 'https://images.example.com/empanadas-salta.jpg',
-    galleryUrls: [
-      'https://images.example.com/empanadas-1.jpg',
-      'https://images.example.com/empanadas-2.jpg',
-    ],
+    imageUrl: '/uploads/activities/a15_0.jpg',
+    galleryUrls: [],
     duration: '3 horas',
     price: 15000,
     currency: 'ARS',
@@ -479,10 +454,9 @@ const activities = [
     category: 'free_tour',
     description:
       'Descubre el colorido barrio de Nuñez, hogar del Monumental, estadio de River Plate.',
-    imageUrl: 'https://images.example.com/nuñez-tour.jpg',
+    imageUrl: '/uploads/activities/a16_0.jpg',
     galleryUrls: [
-      'https://images.example.com/nuñez-1.jpg',
-      'https://images.example.com/nuñez-2.jpg',
+      '/uploads/activities/a16_1.jpg',
     ],
     duration: '1 hora',
     price: 0,
@@ -1179,6 +1153,13 @@ const getSyncChangesSince = (since) => {
     }));
 };
 
+const updateActivityImage = (activityId, imageUrl) => {
+  const idx = activities.findIndex((a) => a.id === activityId);
+  if (idx === -1) return null;
+  activities[idx] = { ...activities[idx], imageUrl };
+  return activities[idx];
+};
+
 module.exports = {
   users,
   otpCodes,
@@ -1215,5 +1196,6 @@ module.exports = {
   getSyncChangesSince,
   getUserBookings,
   getBookingById,
+  updateActivityImage,
 };
 

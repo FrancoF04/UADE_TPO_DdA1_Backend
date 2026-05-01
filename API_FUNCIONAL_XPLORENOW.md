@@ -194,6 +194,36 @@ Body:
 }
 ```
 
+### POST `/profile/photo`
+Sube o reemplaza la foto de perfil del usuario autenticado.
+
+Headers:
+
+```http
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+Campo del formulario: `photo` (archivo de imagen — jpeg, png, gif o webp, máx. 5 MB).
+
+Respuesta:
+
+```json
+{
+  "success": true,
+  "data": {
+    "photoUrl": "/uploads/users/<uuid>.jpg",
+    "user": {
+      "id": "u1",
+      "name": "Juan Perez",
+      "profilePhotoUrl": "/uploads/users/<uuid>.jpg"
+    }
+  }
+}
+```
+
+> La URL devuelta es relativa al servidor. Para obtener la imagen usar `GET /uploads/users/<filename>`.
+
 ### GET `/profile/preferences`
 Recupera preferencias de viaje.
 
@@ -279,6 +309,32 @@ Authorization: Bearer <token>
 
 ### GET `/api/activities/featured`
 Actividades destacadas.
+
+### POST `/api/activities/:id/image`
+Sube o reemplaza la imagen principal de una actividad. Requiere autenticación.
+
+Headers:
+
+```http
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+Campo del formulario: `image` (archivo de imagen — jpeg, png, gif o webp, máx. 5 MB).
+
+Respuesta:
+
+```json
+{
+  "success": true,
+  "data": {
+    "imageUrl": "/uploads/activities/<uuid>.jpg",
+    "activity": { "id": "a1", "name": "...", "imageUrl": "/uploads/activities/<uuid>.jpg" }
+  }
+}
+```
+
+> La URL devuelta es relativa al servidor. Para obtener la imagen usar `GET /uploads/activities/<filename>`.
 
 ### GET `/api/activities/:id`
 Detalle completo de actividad.
@@ -505,11 +561,13 @@ Para simplificar el consumo desde el frontend, estas son las rutas que conviene 
 
 - `GET /profile`
 - `PATCH /profile`
+- `POST /profile/photo`
 - `GET /profile/preferences`
 - `PUT /profile/preferences`
 - `GET /profile/bookings-summary`
 - `GET /api/activities`
 - `GET /api/activities/:id`
+- `POST /api/activities/:id/image`
 - `GET /api/activities/recommended`
 - `GET /api/activities/history`
 - `GET /api/users/reservations`
