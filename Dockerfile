@@ -13,6 +13,7 @@ WORKDIR /app
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY src/ ./src/
+COPY uploads/ ./uploads/
 COPY package.json ./
 
 USER appuser

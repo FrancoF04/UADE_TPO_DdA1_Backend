@@ -39,9 +39,10 @@ const ratings = [];
 const news = [
   {
     id: 'n1',
+    category: 'promocion',
     imageUrl: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1200&q=80&auto=format&fit=crop',
     title: 'Promo especial en Buenos Aires',
-    description: 'Descuentos en actividades urbanas y gastronomicas durante abril y mayo.',
+    description: 'Beneficios y precios promocionales para recorridos guiados durante abril y mayo.',
     activityId: 'a1',
     content:
       'Promocion especial para recorridos guiados, con cupos limitados y beneficios para reservas anticipadas.',
@@ -49,20 +50,51 @@ const news = [
   },
   {
     id: 'n2',
+    category: 'descuento',
     imageUrl: 'https://images.unsplash.com/photo-1606185695994-f392203f3583?w=1200&q=80&auto=format&fit=crop',
-    title: 'Ofertas en experiencias de vino',
-    description: 'Tarifas promocionales para tours de bodegas y degustaciones premium.',
+    title: '20% off en experiencias de vino',
+    description: 'Tarifas con descuento para tours de bodegas y degustaciones premium en Mendoza.',
     activityId: 'a7',
-    content: 'La temporada de vendimia incluye beneficios especiales para reservas flexibles.',
+    content: 'La temporada de vendimia incluye beneficios especiales y descuentos para reservas flexibles.',
     createdAt: '2026-04-05T10:00:00Z',
   },
   {
     id: 'n3',
+    category: 'nuevo_destino',
     imageUrl: 'https://images.unsplash.com/photo-1612900538226-0e2140aa02f6?w=1200&q=80&auto=format&fit=crop',
-    title: 'Destino destacado: Salta',
-    description: 'Nuevas salidas en excursiones de altura y experiencias gastronomicas regionales.',
+    title: 'Nuevo destino: Salta',
+    description: 'Sumamos Salta al catalogo: excursiones de altura y experiencias gastronomicas regionales.',
     content: 'Salta concentra varias de las experiencias destacadas del mes con alta demanda.',
     createdAt: '2026-04-10T10:00:00Z',
+  },
+  {
+    id: 'n4',
+    category: 'noticia',
+    imageUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=80&auto=format&fit=crop',
+    title: 'XploreNow renueva su catalogo de actividades',
+    description: 'Incorporamos nuevas guias certificadas y actualizamos las politicas de cancelacion.',
+    content:
+      'Como parte de la mejora continua, sumamos guias certificadas en categoria adventure y excursion, y actualizamos los plazos de cancelacion para mayor flexibilidad.',
+    createdAt: '2026-04-15T10:00:00Z',
+  },
+  {
+    id: 'n5',
+    category: 'descuento',
+    imageUrl: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1200&q=80&auto=format&fit=crop',
+    title: '15% off en aventura patagonica',
+    description: 'Descuento aplicado en trekking y travesias para reservas de mayo.',
+    activityId: 'a4',
+    content: 'Reservando en mayo accedes a 15% de descuento en actividades adventure de Bariloche y Ushuaia.',
+    createdAt: '2026-04-18T10:00:00Z',
+  },
+  {
+    id: 'n6',
+    category: 'nuevo_destino',
+    imageUrl: 'https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=1200&q=80&auto=format&fit=crop',
+    title: 'Nuevo destino: Ushuaia',
+    description: 'Estrenamos experiencias en el fin del mundo con guias locales y avistaje.',
+    content: 'Ushuaia ya esta disponible con excursiones al canal Beagle, trekking y experiencias gastronomicas regionales.',
+    createdAt: '2026-04-20T10:00:00Z',
   },
 ];
 
