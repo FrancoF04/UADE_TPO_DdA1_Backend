@@ -64,6 +64,7 @@ const news = [
     imageUrl: 'https://images.unsplash.com/photo-1612900538226-0e2140aa02f6?w=1200&q=80&auto=format&fit=crop',
     title: 'Nuevo destino: Salta',
     description: 'Sumamos Salta al catalogo: excursiones de altura y experiencias gastronomicas regionales.',
+    activityId: 'a12',
     content: 'Salta concentra varias de las experiencias destacadas del mes con alta demanda.',
     createdAt: '2026-04-10T10:00:00Z',
   },
@@ -90,10 +91,11 @@ const news = [
   {
     id: 'n6',
     category: 'nuevo_destino',
-    imageUrl: 'https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=1200&q=80&auto=format&fit=crop',
-    title: 'Nuevo destino: Ushuaia',
-    description: 'Estrenamos experiencias en el fin del mundo con guias locales y avistaje.',
-    content: 'Ushuaia ya esta disponible con excursiones al canal Beagle, trekking y experiencias gastronomicas regionales.',
+    imageUrl: 'https://images.unsplash.com/photo-1610995195985-7229a1409d4b?w=1200&q=80&auto=format&fit=crop',
+    title: 'Nuevo destino: Cordoba',
+    description: 'Sumamos Cordoba al catalogo: recorridos historicos por la Manzana Jesuitica y arquitectura barroca.',
+    activityId: 'a11',
+    content: 'La Docta ya esta disponible con visitas guiadas por su patrimonio jesuitico, la Catedral y el Cabildo.',
     createdAt: '2026-04-20T10:00:00Z',
   },
 ];
