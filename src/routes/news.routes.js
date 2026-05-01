@@ -14,6 +14,7 @@ router.get('/', (_req, res) => {
   const items = paginate(
     orderedNews.map((item) => ({
       id: item.id,
+      category: item.category || 'noticia',
       image: item.imageUrl,
       title: item.title,
       description: item.description,
@@ -41,6 +42,7 @@ router.get('/:id', (req, res) => {
   return success(res, {
     news: {
       id: item.id,
+      category: item.category || 'noticia',
       image: item.imageUrl,
       title: item.title,
       description: item.description,
