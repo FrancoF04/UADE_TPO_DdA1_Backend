@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { authenticate } = require('../middleware/auth');
 const { success, error } = require('../utils/response');
 const { users, findUserById, getBookingsSummaryForUser } = require('../data/data');
+const { uploadUserPhoto } = require('../utils/upload');
 
 const router = Router();
 
@@ -69,6 +70,30 @@ router.patch(['/', '/me'], authenticate, (req, res) => {
   users[userIndex] = updatedUser;
 
   return success(res, { user: sanitizeProfile(updatedUser) });
+});
+
+// POST /profile/photo  — upload or replace user profile photo
+router.post('/photo', authenticate, (req, res) => {
+  uploadUserPhoto(req, res, (err) => {
+    if (err) {
+      const status = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+      return error(res, err.message, status);
+    }
+
+    if (!req.file) {
+      return error(res, 'No se envio ninguna imagen. Usa el campo "photo" en el formulario.', 400);
+    }
+
+    const userIndex = users.findIndex((item) => item.id === (req.auth?.userId || req.user?.id));
+    if (userIndex === -1) {
+      return error(res, 'Usuario no encontrado', 404);
+    }
+
+    const photoUrl = `/uploads/users/${req.file.filename}`;
+    users[userIndex] = { ...users[userIndex], profilePhotoUrl: photoUrl };
+
+    return success(res, { user: sanitizeProfile(users[userIndex]), photoUrl });
+  });
 });
 
 router.get('/preferences', authenticate, (req, res) => {

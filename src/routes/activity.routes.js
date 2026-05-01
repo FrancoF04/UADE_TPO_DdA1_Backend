@@ -11,7 +11,9 @@ const {
   getBookingById,
   findSessionByToken,
   findUserById,
+  updateActivityImage,
 } = require('../data/data');
+const { uploadActivityImage } = require('../utils/upload');
 
 const router = Router();
 
@@ -155,6 +157,30 @@ router.get('/', (req, res) => {
     page: pagination.page,
     page_size: pagination.pageSize,
     limit: pagination.limit,
+  });
+});
+
+// POST /api/activities/:id/image — upload or replace the main image of an activity
+router.post('/:id/image', authenticate, (req, res) => {
+  const activity = getDynamicActivityById(req.params.id);
+  if (!activity) {
+    return error(res, 'Actividad no encontrada', 404);
+  }
+
+  uploadActivityImage(req, res, (err) => {
+    if (err) {
+      const status = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+      return error(res, err.message, status);
+    }
+
+    if (!req.file) {
+      return error(res, 'No se envio ninguna imagen. Usa el campo "image" en el formulario.', 400);
+    }
+
+    const imageUrl = `/uploads/activities/${req.file.filename}`;
+    const updated = updateActivityImage(req.params.id, imageUrl);
+
+    return success(res, { activity: serializeActivity(updated), imageUrl });
   });
 });
 
