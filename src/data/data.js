@@ -39,7 +39,7 @@ const ratings = [];
 const news = [
   {
     id: 'n1',
-    imageUrl: 'https://images.example.com/news-buenos-aires.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1200&q=80&auto=format&fit=crop',
     title: 'Promo especial en Buenos Aires',
     description: 'Descuentos en actividades urbanas y gastronomicas durante abril y mayo.',
     activityId: 'a1',
@@ -49,7 +49,7 @@ const news = [
   },
   {
     id: 'n2',
-    imageUrl: 'https://images.example.com/news-mendoza.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1606185695994-f392203f3583?w=1200&q=80&auto=format&fit=crop',
     title: 'Ofertas en experiencias de vino',
     description: 'Tarifas promocionales para tours de bodegas y degustaciones premium.',
     activityId: 'a7',
@@ -58,7 +58,7 @@ const news = [
   },
   {
     id: 'n3',
-    imageUrl: 'https://images.example.com/news-salta.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1612900538226-0e2140aa02f6?w=1200&q=80&auto=format&fit=crop',
     title: 'Destino destacado: Salta',
     description: 'Nuevas salidas en excursiones de altura y experiencias gastronomicas regionales.',
     content: 'Salta concentra varias de las experiencias destacadas del mes con alta demanda.',
@@ -102,7 +102,12 @@ const activities = [
     description:
       'Descubre el colorido barrio de La Boca, hogar del Caminito y la Bombonera. Conoce la historia de la inmigracion italiana y el arte callejero.',
     imageUrl: '/uploads/activities/a2_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1611865422861-391cf5f3ba49?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1609080814811-5837f3c7095a?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1684355277143-69c991fa052a?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1693891557268-70c5d6195922?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '2 horas',
     price: 0,
     currency: 'ARS',
@@ -180,7 +185,12 @@ const activities = [
     description:
       'Visita el impresionante Glaciar Perito Moreno en el Parque Nacional Los Glaciares. Incluye navegacion por el Lago Argentino y pasarelas panoramicas.',
     imageUrl: '/uploads/activities/a5_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1638500551033-a0f60c8e768e?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1552751753-0fc84ae5b6c8?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1593434820349-0ca11844c957?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1694011772958-fa5641fa8873?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '8 horas',
     price: 45000,
     currency: 'ARS',
@@ -230,7 +240,12 @@ const activities = [
     description:
       'Recorre las bodegas mas prestigiosas de Mendoza. Degustacion de Malbec, Cabernet Sauvignon y blend de alta gama con maridaje de quesos regionales.',
     imageUrl: '/uploads/activities/a7_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1639757664366-83a495f4a9d9?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1558565850-88bf2a02e42e?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1659038025134-5f47bf7956c0?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1627626651107-7ce593b9bd76?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '5 horas',
     price: 35000,
     currency: 'ARS',
@@ -254,7 +269,12 @@ const activities = [
     description:
       'Vivi la experiencia completa del asado argentino. Aprende a preparar chimichurri, cortes de carne y el arte del fuego. Incluye empanadas y vino.',
     imageUrl: '/uploads/activities/a8_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1529694157872-4e0c0f3b238b?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1497395122351-5d3554bbdb17?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1673491100948-8ef540ceedf4?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1592409713878-33e2015e92b4?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '4 horas',
     price: 28000,
     currency: 'ARS',
@@ -331,7 +351,12 @@ const activities = [
     description:
       'Recorre la Manzana Jesuitica, la Catedral y el Cabildo de Cordoba. Conoce la historia colonial y la arquitectura barroca de la Docta.',
     imageUrl: '/uploads/activities/a11_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1610995195985-7229a1409d4b?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1619906437551-0226322e0a72?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1610995181977-0283a334a65c?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1699375220213-a444c2edcb50?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '3 horas',
     price: 5000,
     currency: 'ARS',
@@ -383,7 +408,12 @@ const activities = [
     description:
       'Navega por el Canal Beagle y visita la Isla de los Lobos, la Isla de los Pajaros y el Faro Les Eclaireurs. Avistaje de fauna marina.',
     imageUrl: '/uploads/activities/a13_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1671595334685-fce6db1f53a4?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1520637438573-ee1ba80b2a7f?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1712921674745-09ee3dbdff3d?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1671595425121-91f5c1b54ff9?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '4 horas',
     price: 32000,
     currency: 'ARS',
@@ -407,7 +437,12 @@ const activities = [
     description:
       'Recorre a caballo las formaciones rocosas de la Quebrada de las Flechas. Paisajes unicos del noroeste argentino con guias baqueanos locales.',
     imageUrl: '/uploads/activities/a14_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1764967112006-4e4631abd58e?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1764962223825-4fee79748d09?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1764962249533-cd4539d25354?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1660866838294-672fe35589b6?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '4 horas',
     price: 20000,
     currency: 'ARS',
@@ -431,7 +466,12 @@ const activities = [
     description:
       'Proba las mejores empanadas saltenas en un recorrido por las casas de empanadas mas tradicionales. Aprende la receta original del repulgue salteno.',
     imageUrl: '/uploads/activities/a15_0.jpg',
-    galleryUrls: [],
+    galleryUrls: [
+      'https://images.unsplash.com/photo-1646314230198-e27c375e1a2a?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1619926340139-9a2e2245a64e?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1679310249395-ae267ae0d273?w=1200&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1762207654337-73ccc93a80c4?w=1200&q=80&auto=format&fit=crop',
+    ],
     duration: '3 horas',
     price: 15000,
     currency: 'ARS',
