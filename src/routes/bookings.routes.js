@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { authenticate } = require('../middleware/auth');
 const { success, error } = require('../utils/response');
 const { getPagination, paginate } = require('../utils/pagination');
+const { pollUntil } = require('../utils/longPoll');
 const { serializeBooking, serializeActivity } = require('../utils/activityView');
 const {
   addUserActivity,
@@ -176,6 +177,16 @@ router.post('/sync', authenticate, (req, res) => {
     serverTime: new Date().toISOString(),
     localState: localState || null,
     changes,
+  });
+});
+
+// Clon de /sync como Long Polling real (Feature 12.30 — avisos de cancelación/reprogramación)
+router.get('/sync/poll', authenticate, (req, res) => {
+  const since = req.query.since || null;
+
+  pollUntil(req, res, () => {
+    const changes = getSyncChangesSince(since);
+    return changes.length > 0 ? { since, serverTime: new Date().toISOString(), changes } : null;
   });
 });
 

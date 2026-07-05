@@ -1262,6 +1262,55 @@ const getPendingNotificationsForUser = (userId) => {
     }, []);
 };
 
+const operatorCancelBooking = (bookingId) => {
+  const booking = findBookingById(bookingId);
+  if (!booking || booking.status !== 'confirmed') {
+    return null;
+  }
+
+  booking.status = 'cancelled';
+  booking.updatedAt = new Date().toISOString();
+
+  const user = findUserById(booking.userId);
+  if (user) {
+    normalizeUserActivities(user);
+    const selection = user.activities.find((item) => item.bookingId === bookingId);
+    if (selection) selection.status = 'cancelled';
+  }
+
+  return booking;
+};
+
+const operatorRescheduleBooking = (bookingId, selectedScheduleId) => {
+  const booking = findBookingById(bookingId);
+  if (!booking || booking.status !== 'confirmed') {
+    return null;
+  }
+
+  const activity = getDynamicActivityById(booking.activityId);
+  const targetSchedule = (activity?.schedules || []).find((schedule) => schedule.id === selectedScheduleId);
+  if (!targetSchedule) {
+    return null;
+  }
+
+  booking.selectedDate = targetSchedule.date;
+  booking.selectedScheduleId = targetSchedule.id;
+  booking.updatedAt = new Date().toISOString();
+  booking.reminderSentAt = null;
+
+  const user = findUserById(booking.userId);
+  if (user) {
+    normalizeUserActivities(user);
+    const selection = user.activities.find((item) => item.bookingId === bookingId);
+    if (selection) {
+      selection.selectedDate = targetSchedule.date;
+      selection.selectedScheduleId = targetSchedule.id;
+    }
+  }
+
+  return booking;
+};
+
 module.exports = {
   users,
   otpCodes,
@@ -1301,5 +1350,7 @@ module.exports = {
   updateActivityImage,
   parseDurationMs,
   getPendingNotificationsForUser,
+  operatorCancelBooking,
+  operatorRescheduleBooking,
 };
 
