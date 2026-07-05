@@ -1271,5 +1271,6 @@ module.exports = {
   getUserBookings,
   getBookingById,
   updateActivityImage,
+  parseDurationMs,
 };
 

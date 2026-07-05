@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { authenticate } = require('../middleware/auth');
 const { success, error } = require('../utils/response');
-const { addRating, getRatingByBooking, getBookingById } = require('../data/data');
+const { addRating, getRatingByBooking, getBookingById, getDynamicActivityById, parseDurationMs } = require('../data/data');
 
 const router = Router();
 
@@ -13,13 +13,14 @@ const parseScore = (value) => {
   return Number.isInteger(parsed) && parsed >= 1 && parsed <= 5 ? parsed : null;
 };
 
-const isWithinRatingWindow = (booking) => {
+const isWithinRatingWindow = (booking, activity) => {
   const bookingDate = new Date(booking.selectedDate);
   if (Number.isNaN(bookingDate.getTime())) {
     return false;
   }
 
-  return Date.now() - bookingDate.getTime() <= RATING_WINDOW_MS;
+  const finalizationMs = bookingDate.getTime() + parseDurationMs(activity?.duration);
+  return Date.now() - finalizationMs <= RATING_WINDOW_MS;
 };
 
 router.post('/', authenticate, (req, res) => {
@@ -46,11 +47,12 @@ router.post('/', authenticate, (req, res) => {
     return error(res, 'Reserva no encontrada', 404);
   }
 
-  if (booking.status !== 'finalized' && new Date(booking.selectedDate).getTime() > Date.now()) {
+  if (booking.status !== 'finalized') {
     return error(res, 'La actividad aun no finalizo', 409);
   }
 
-  if (!isWithinRatingWindow(booking)) {
+  const activity = getDynamicActivityById(booking.activityId);
+  if (!isWithinRatingWindow(booking, activity)) {
     return error(res, 'La calificacion debe enviarse dentro de las 48 horas posteriores a la finalizacion', 409);
   }
 
