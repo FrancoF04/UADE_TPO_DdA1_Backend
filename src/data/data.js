@@ -1262,53 +1262,56 @@ const getPendingNotificationsForUser = (userId) => {
     }, []);
 };
 
-const operatorCancelBooking = (bookingId) => {
-  const booking = findBookingById(bookingId);
-  if (!booking || booking.status !== 'confirmed') {
-    return null;
-  }
+// Operador actuando sobre un schedule completo de una actividad (afecta a todas las
+// reservas confirmadas de ese horario, no a una sola) — fiel al punto 12.30 del TPO.
+const getBookingsForSchedule = (activityId, selectedScheduleId) => bookings.filter(
+  (booking) => booking.activityId === activityId
+    && booking.selectedScheduleId === selectedScheduleId
+    && booking.status === 'confirmed',
+);
 
-  booking.status = 'cancelled';
-  booking.updatedAt = new Date().toISOString();
-
+const syncUserActivitySelection = (booking, mutate) => {
   const user = findUserById(booking.userId);
-  if (user) {
-    normalizeUserActivities(user);
-    const selection = user.activities.find((item) => item.bookingId === bookingId);
-    if (selection) selection.status = 'cancelled';
-  }
-
-  return booking;
+  if (!user) return;
+  normalizeUserActivities(user);
+  const selection = user.activities.find((item) => item.bookingId === booking.id);
+  if (selection) mutate(selection);
 };
 
-const operatorRescheduleBooking = (bookingId, selectedScheduleId) => {
-  const booking = findBookingById(bookingId);
-  if (!booking || booking.status !== 'confirmed') {
-    return null;
-  }
+const operatorCancelSchedule = (activityId, selectedScheduleId) => {
+  const activity = getDynamicActivityById(activityId);
+  if (!activity) return null;
 
-  const activity = getDynamicActivityById(booking.activityId);
-  const targetSchedule = (activity?.schedules || []).find((schedule) => schedule.id === selectedScheduleId);
-  if (!targetSchedule) {
-    return null;
-  }
+  const affectedBookings = getBookingsForSchedule(activityId, selectedScheduleId);
 
-  booking.selectedDate = targetSchedule.date;
-  booking.selectedScheduleId = targetSchedule.id;
-  booking.updatedAt = new Date().toISOString();
-  booking.reminderSentAt = null;
+  affectedBookings.forEach((booking) => {
+    booking.status = 'cancelled';
+    booking.updatedAt = new Date().toISOString();
+    syncUserActivitySelection(booking, (selection) => { selection.status = 'cancelled'; });
+  });
 
-  const user = findUserById(booking.userId);
-  if (user) {
-    normalizeUserActivities(user);
-    const selection = user.activities.find((item) => item.bookingId === bookingId);
-    if (selection) {
+  return affectedBookings;
+};
+
+const operatorRescheduleSchedule = (activityId, fromScheduleId, toScheduleId) => {
+  const activity = getDynamicActivityById(activityId);
+  const targetSchedule = (activity?.schedules || []).find((schedule) => schedule.id === toScheduleId);
+  if (!activity || !targetSchedule) return null;
+
+  const affectedBookings = getBookingsForSchedule(activityId, fromScheduleId);
+
+  affectedBookings.forEach((booking) => {
+    booking.selectedDate = targetSchedule.date;
+    booking.selectedScheduleId = targetSchedule.id;
+    booking.updatedAt = new Date().toISOString();
+    booking.reminderSentAt = null;
+    syncUserActivitySelection(booking, (selection) => {
       selection.selectedDate = targetSchedule.date;
       selection.selectedScheduleId = targetSchedule.id;
-    }
-  }
+    });
+  });
 
-  return booking;
+  return affectedBookings;
 };
 
 module.exports = {
@@ -1350,7 +1353,7 @@ module.exports = {
   updateActivityImage,
   parseDurationMs,
   getPendingNotificationsForUser,
-  operatorCancelBooking,
-  operatorRescheduleBooking,
+  operatorCancelSchedule,
+  operatorRescheduleSchedule,
 };
 
