@@ -13,6 +13,7 @@ const bookingsRoutes = require('./routes/bookings.routes');
 const favoritesRoutes = require('./routes/favorites.routes');
 const ratingsRoutes = require('./routes/ratings.routes');
 const newsRoutes = require('./routes/news.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -35,6 +36,7 @@ app.use(['/bookings', '/api/bookings'], bookingsRoutes);
 app.use(['/favorites', '/api/favorites'], favoritesRoutes);
 app.use(['/ratings', '/api/ratings'], ratingsRoutes);
 app.use(['/news', '/api/news'], newsRoutes);
+app.use(['/notifications', '/api/notifications'], notificationsRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not Found' });

@@ -1234,6 +1234,34 @@ const updateActivityImage = (activityId, imageUrl) => {
   return activities[idx];
 };
 
+const REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+const getPendingNotificationsForUser = (userId) => {
+  const now = Date.now();
+  return getUserBookings(userId)
+    .filter((booking) => booking.status === 'confirmed' && !booking.reminderSentAt)
+    .reduce((events, booking) => {
+      const startMs = new Date(booking.selectedDate).getTime();
+      if (Number.isNaN(startMs)) return events;
+
+      const msUntilStart = startMs - now;
+      if (msUntilStart > 0 && msUntilStart <= REMINDER_WINDOW_MS) {
+        booking.reminderSentAt = new Date().toISOString();
+        const activity = getDynamicActivityById(booking.activityId);
+        events.push({
+          type: 'reminder_24h',
+          bookingId: booking.id,
+          activityId: booking.activityId,
+          activityName: activity?.name || '',
+          selectedDate: booking.selectedDate,
+          voucherCode: booking.voucherCode || null,
+        });
+      }
+
+      return events;
+    }, []);
+};
+
 module.exports = {
   users,
   otpCodes,
@@ -1272,5 +1300,6 @@ module.exports = {
   getBookingById,
   updateActivityImage,
   parseDurationMs,
+  getPendingNotificationsForUser,
 };
 
