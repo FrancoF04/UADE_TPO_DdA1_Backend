@@ -555,6 +555,19 @@ function buildAvailableDates(baseDate, count = 3, dayStep = 7) {
     return [];
   }
 
+  // Si la fecha base ya pasó, adelantar la serie en semanas enteras (preserva
+  // día de semana, hora y espaciado) hasta que la primera fecha sea futura.
+  // Evita que los datos semilla venzan con el correr del tiempo.
+  // En tests se mantienen las fechas originales por determinismo.
+  if (process.env.NODE_ENV !== 'test') {
+    const now = Date.now();
+    if (parsed.getTime() <= now) {
+      const weekMs = dayStep * 24 * 60 * 60 * 1000;
+      const weeksToAdd = Math.ceil((now - parsed.getTime()) / weekMs);
+      parsed.setUTCDate(parsed.getUTCDate() + weeksToAdd * dayStep);
+    }
+  }
+
   return Array.from({ length: count }, (_, index) => {
     const next = new Date(parsed);
     next.setUTCDate(next.getUTCDate() + index * dayStep);
