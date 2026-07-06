@@ -1254,6 +1254,7 @@ const getPendingNotificationsForUser = (userId) => {
           activityId: booking.activityId,
           activityName: activity?.name || '',
           selectedDate: booking.selectedDate,
+          quantity: booking.quantity || 1,
           voucherCode: booking.voucherCode || null,
         });
       }
