@@ -113,20 +113,20 @@ const activities = [
       '/uploads/activities/a1_1.jpg',
       '/uploads/activities/a1_2.jpg',
     ],
-    duration: '2.5 horas',
+    duration: '0.01 horas',
     price: 0,
     currency: 'ARS',
     availableSpots: 15,
     totalSpots: 20,
-    date: '2026-04-10T10:00:00Z',
-    dates: buildAvailableDates('2026-04-10T10:00:00Z', 4, 7),
+    date: new Date(Date.now() + 4 * 60 * 1000).toISOString(),
+    dates: [new Date(Date.now() + 4 * 60 * 1000).toISOString()],
     meetingPoint: 'Plaza de Mayo, frente al Cabildo',
     guide: { name: 'Carlos Rodriguez', rating: 4.8 },
     language: 'Espanol',
     included: ['Guia bilingue', 'Mapa del recorrido'],
     cancellationPolicy: 'Cancelacion gratuita hasta 24 horas antes',
     featured: true,
-    createdAt: '2026-01-10T10:00:00Z',
+    createdAt: new Date(Date.now() + 4 * 60 * 1000).toISOString(),
   },
   {
     id: 'a2',
@@ -142,20 +142,20 @@ const activities = [
       'https://images.unsplash.com/photo-1684355277143-69c991fa052a?w=1200&q=80&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1693891557268-70c5d6195922?w=1200&q=80&auto=format&fit=crop',
     ],
-    duration: '2 horas',
+    duration: '0.01 horas',
     price: 0,
     currency: 'ARS',
     availableSpots: 20,
     totalSpots: 25,
-    date: '2026-04-12T14:00:00Z',
-    dates: buildAvailableDates('2026-04-12T14:00:00Z', 4, 7),
+    date: new Date(Date.now() + 4 * 60 * 1000).toISOString(),
+    dates: [new Date(Date.now() + 4 * 60 * 1000).toISOString()],
     meetingPoint: 'Estacion La Boca del Premetro',
     guide: { name: 'Lucia Fernandez', rating: 4.9 },
     language: 'Espanol',
     included: ['Guia profesional', 'Fotos del grupo'],
     cancellationPolicy: 'Cancelacion gratuita hasta 12 horas antes',
     featured: true,
-    createdAt: '2026-01-12T10:00:00Z',
+    createdAt: new Date(Date.now() + 4 * 60 * 1000).toISOString(),
   },
   {
     id: 'a3',
@@ -173,15 +173,15 @@ const activities = [
     currency: 'ARS',
     availableSpots: 10,
     totalSpots: 30,
-    date: '2026-04-15T11:00:00Z',
-    dates: buildAvailableDates('2026-04-15T11:00:00Z', 4, 7),
+    date: new Date(Date.now() + 24 * 60 * 60 * 1000 + 3 * 60 * 1000).toISOString(),
+    dates: [new Date(Date.now() + 24 * 60 * 60 * 1000 + 3 * 60 * 1000).toISOString()],
     meetingPoint: 'Entrada principal del Teatro Colon, Cerrito 628',
     guide: { name: 'Ana Martinez', rating: 4.7 },
     language: 'Espanol',
     included: ['Entrada al teatro', 'Guia especializado', 'Auriculares'],
     cancellationPolicy: 'Cancelacion gratuita hasta 48 horas antes',
     featured: true,
-    createdAt: '2026-01-15T10:00:00Z',
+    createdAt: new Date(Date.now() + 24 * 60 * 60 * 1000 + 3 * 60 * 1000).toISOString(),
   },
   {
     id: 'a4',
@@ -1063,9 +1063,7 @@ const parseDurationMs = (duration) => {
 const ARGENTINA_OFFSET_MS = -3 * 60 * 60 * 1000;
 
 const normalizeBookingStatuses = () => {
-  const nowUtc = Date.now();
-  // Comparamos contra la hora actual en Argentina (UTC-3)
-  const nowArgentina = nowUtc + ARGENTINA_OFFSET_MS;
+  const now = Date.now();
 
   bookings.forEach((booking) => {
     if (booking.status !== 'confirmed') {
@@ -1084,7 +1082,7 @@ const normalizeBookingStatuses = () => {
     const activity = activities.find((a) => a.id === booking.activityId);
     const endMs = bookingMs + parseDurationMs(activity?.duration);
 
-    if (endMs < nowArgentina) {
+    if (endMs < now) {
       booking.status = 'finalized';
       booking.updatedAt = new Date().toISOString();
     }
