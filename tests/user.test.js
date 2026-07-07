@@ -140,10 +140,13 @@ describe('User endpoints', () => {
         expiresAt: new Date(Date.now() + 86400000).toISOString(),
       });
 
+      const activity = activities.find((item) => item.id === 'a1');
+      const selectedDate = activity.dates[0];
+
       await request(app)
         .post('/api/users/activities')
         .set('Authorization', 'Bearer list-token')
-        .send({ activityId: 'a1', selectedDate: '2026-04-10T10:00:00Z' });
+        .send({ activityId: 'a1', selectedDate });
 
       const res = await request(app)
         .get('/api/users/activities')
@@ -155,7 +158,7 @@ describe('User endpoints', () => {
         expect.objectContaining({
           activityId: 'a1',
           activityName: 'Walking Tour por San Telmo',
-          selectedDate: '2026-04-10T10:00:00.000Z',
+          selectedDate,
           selectedScheduleId: 'a1-s1',
           quantity: 1,
           cancellationHours: 24,
@@ -173,10 +176,13 @@ describe('User endpoints', () => {
         expiresAt: new Date(Date.now() + 86400000).toISOString(),
       });
 
+      const activity = activities.find((item) => item.id === 'a1');
+      const selectedDate = activity.dates[0];
+
       const firstResponse = await request(app)
         .post('/api/users/activities')
         .set('Authorization', 'Bearer save-token')
-        .send({ activityId: 'a1', selectedDate: '2026-04-10T10:00:00Z' });
+        .send({ activityId: 'a1', selectedDate });
 
       expect(firstResponse.status).toBe(201);
       expect(firstResponse.body.data.detailedActivities).toHaveLength(1);
@@ -184,7 +190,7 @@ describe('User endpoints', () => {
         expect.objectContaining({
           activityId: 'a1',
           activityName: 'Walking Tour por San Telmo',
-          selectedDate: '2026-04-10T10:00:00.000Z',
+          selectedDate,
           selectedScheduleId: 'a1-s1',
           quantity: 1,
           cancellationHours: 24,
@@ -200,19 +206,25 @@ describe('User endpoints', () => {
         expiresAt: new Date(Date.now() + 86400000).toISOString(),
       });
 
+      // a1 tiene un unico horario fijo (pensado para demos en producción);
+      // usamos a4, que sigue generando multiples schedules, para ejercitar
+      // la reserva por selectedScheduleId distinto del primero.
+      const activity = activities.find((item) => item.id === 'a4');
+      const targetSchedule = activity.schedules[1];
+
       const response = await request(app)
         .post('/api/users/activities')
         .set('Authorization', 'Bearer save-token-schedule')
-        .send({ activityId: 'a1', selectedScheduleId: 'a1-s2' });
+        .send({ activityId: 'a4', selectedScheduleId: targetSchedule.id });
 
       expect(response.status).toBe(201);
       expect(response.body.data.detailedActivities).toHaveLength(1);
       expect(response.body.data.detailedActivities[0]).toEqual(
         expect.objectContaining({
-          activityId: 'a1',
-          activityName: 'Walking Tour por San Telmo',
-          selectedDate: '2026-04-17T10:00:00.000Z',
-          selectedScheduleId: 'a1-s2',
+          activityId: 'a4',
+          activityName: 'Recorrido por el Museo MALBA',
+          selectedDate: targetSchedule.date,
+          selectedScheduleId: targetSchedule.id,
           quantity: 1,
           cancellationHours: 24,
           status: 'active',
@@ -291,8 +303,14 @@ describe('User endpoints', () => {
     });
 
     it('should reject cancellation inside the forbidden window', async () => {
+      // a1 requiere cancelar con 24hs de anticipacion; ubicamos el reloj
+      // simulado a 1h de su horario (dentro de la ventana prohibida) en vez
+      // de una fecha de calendario fija, ya que a1.dates es relativo a "ahora".
+      const activity = activities.find((item) => item.id === 'a1');
+      const activityDate = new Date(activity.dates[0]);
+
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-04-09T11:00:00Z'));
+      jest.setSystemTime(new Date(activityDate.getTime() - 60 * 60 * 1000));
 
       try {
         sessions.push({
@@ -455,131 +473,6 @@ describe('User endpoints', () => {
       } finally {
         jest.useRealTimers();
       }
-    });
-
-    it('should reject when selectedDate and selectedScheduleId are missing', async () => {
-      sessions.push({
-        token: 'save-token-2',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      const res = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer save-token-2')
-        .send({ activityId: 'a1' });
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('selectedDate o selectedScheduleId es requerido');
-    });
-
-    it('should reject when selectedDate is not available for activity', async () => {
-      sessions.push({
-        token: 'save-token-3',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      const res = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer save-token-3')
-        .send({ activityId: 'a1', selectedDate: '2030-01-01T10:00:00Z' });
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('selectedDate no disponible para la actividad');
-    });
-
-    it('should reject when selectedScheduleId is not available for activity', async () => {
-      sessions.push({
-        token: 'save-token-4',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      const res = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer save-token-4')
-        .send({ activityId: 'a1', selectedScheduleId: 'a1-s99' });
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('selectedScheduleId no disponible para la actividad');
-    });
-
-    it('should save an activity by schedule id', async () => {
-      sessions.push({
-        token: 'save-token-schedule',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      const response = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer save-token-schedule')
-        .send({ activityId: 'a1', selectedScheduleId: 'a1-s2' });
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.detailedActivities).toHaveLength(1);
-      expect(response.body.data.detailedActivities[0]).toEqual({
-        activityId: 'a1',
-        activityName: 'Walking Tour por San Telmo',
-        selectedDate: '2026-04-17T10:00:00.000Z',
-        selectedScheduleId: 'a1-s2',
-        quantity: 1,
-        cancellationHours: 24,
-        status: 'active',
-      });
-    });
-
-    it('should recalculate schedule availability after booking', async () => {
-      sessions.push({
-        token: 'dynamic-capacity-token',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      const before = await request(app).get('/api/activities/a1');
-      expect(before.status).toBe(200);
-      expect(before.body.data.schedules[0].availableSpots).toBe(1);
-
-      const booking = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer dynamic-capacity-token')
-        .send({ activityId: 'a1', selectedScheduleId: 'a1-s1' });
-
-      expect(booking.status).toBe(201);
-
-      const after = await request(app).get('/api/activities/a1');
-      expect(after.status).toBe(200);
-      expect(after.body.data.schedules[0].availableSpots).toBe(0);
-    });
-
-    it('should reject booking when no spots remain', async () => {
-      sessions.push({
-        token: 'full-capacity-u1-token',
-        userId: 'u1',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      sessions.push({
-        token: 'full-capacity-u2-token',
-        userId: 'u2',
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-      });
-
-      const firstBooking = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer full-capacity-u1-token')
-        .send({ activityId: 'a1', selectedScheduleId: 'a1-s1' });
-
-      expect(firstBooking.status).toBe(201);
-
-      const secondBooking = await request(app)
-        .post('/api/users/activities')
-        .set('Authorization', 'Bearer full-capacity-u2-token')
-        .send({ activityId: 'a1', selectedScheduleId: 'a1-s1' });
-
-      expect(secondBooking.status).toBe(409);
-      expect(secondBooking.body.error).toBe('No hay cupos disponibles para la fecha seleccionada');
     });
 
     it('should reject when selectedDate and selectedScheduleId are missing', async () => {

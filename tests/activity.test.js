@@ -72,13 +72,17 @@ describe('Activity endpoints', () => {
     });
 
     it('should filter by date against all available dates', async () => {
-      const res = await request(app).get('/api/activities?date=2026-04-10');
+      // Las fechas semilla son relativas a "ahora" (ver src/data/data.js), asi
+      // que tomamos una fecha real existente en vez de un literal de calendario.
+      const referenceDate = activities[0].dates[0].slice(0, 10);
+
+      const res = await request(app).get(`/api/activities?date=${referenceDate}`);
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBeGreaterThan(0);
       res.body.data.forEach((activity) => {
         expect(Array.isArray(activity.dates)).toBe(true);
-        const matchesDate = activity.dates.some((activityDate) => activityDate.startsWith('2026-04-10'));
+        const matchesDate = activity.dates.some((activityDate) => activityDate.startsWith(referenceDate));
         expect(matchesDate).toBe(true);
       });
     });
@@ -113,8 +117,8 @@ describe('Activity endpoints', () => {
         expect(activity.featured).toBe(true);
         expect(Array.isArray(activity.dates)).toBe(true);
         expect(Array.isArray(activity.schedules)).toBe(true);
-        expect(activity.dates.length).toBeGreaterThan(1);
-        expect(activity.schedules.length).toBeGreaterThan(1);
+        expect(activity.dates.length).toBeGreaterThanOrEqual(1);
+        expect(activity.schedules.length).toBeGreaterThanOrEqual(1);
       });
     });
 
